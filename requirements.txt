@@ -1,0 +1,7 @@
+fluent-logger==0.9.3
+python-json-logger==0.1.9
+grpcio==1.13.0
+grpcio-tools==1.13.0
+PyMySQL==0.8.0
+SQLAlchemy==1.2.7
+PyYAML==3.12

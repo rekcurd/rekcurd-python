@@ -1,0 +1,54 @@
+# (Mainly) For non-kubernetes users.
+# Define the parameters below.
+
+# This must be unique.
+# You can also determine an environment variable "DRUCKER_APPLICATION_NAME".
+#   Priority is...
+#     DRUCKER_APPLICATION_NAME > app.name
+app.name: drucker-sample
+
+# You can also determine an environment variable "DRUCKER_SERVICE_PORT".
+#   Priority is...
+#     DRUCKER_SERVICE_PORT > app.port
+app.port: 5000
+
+# This must be unique.
+# You can also determine an environment variable "DRUCKER_SERVICE_NAME".
+#   Priority is...
+#     DRUCKER_SERVICE_NAME > app.service.name
+app.service.name: dev-001
+
+# This must be [development/beta/staging/production]
+# You can also determine an environment variable "DRUCKER_SERVICE_LEVEL".
+#   Priority is...
+#     DRUCKER_SERVICE_LEVEL > app.service.level
+app.service.level: development
+
+# ML model
+# Put your model file under "{app.modeldir}/{app.name}/{app.modelfile}".
+# If you use Drucker-manager, {app.modelfile} will be set by Drucker-manager.
+# You can use the environment variables,
+#   Priority is...
+#     DRUCKER_SERVICE_MODEL_DIR > app.modeldir
+#     DB entry > DRUCKER_SERVICE_MODEL_FILE > app.modelfile
+app.modeldir: ./model
+app.modelfile: default.model
+
+# DB
+# "use.db" must be [sqlite(default)/mysql].
+# If you use Drucker on Kubernetes, you must set "use.db" to "mysql" and prepare MySQL server.
+# You don't need to setup DB. Drucker will do it.
+# You can use the environment variables,
+#   Priority is...
+#     DRUCKER_DB_MODE > use.db
+#     DRUCKER_DB_MYSQL_HOST > db.mysql.host
+#     DRUCKER_DB_MYSQL_PORT > db.mysql.port
+#     DRUCKER_DB_MYSQL_DBNAME > db.mysql.dbname
+#     DRUCKER_DB_MYSQL_USER > db.mysql.user
+#     DRUCKER_DB_MYSQL_PASSWORD > db.mysql.password
+use.db: sqlite
+db.mysql.host: localhost
+db.mysql.port: 3306
+db.mysql.dbname: assignment
+db.mysql.user: user
+db.mysql.password: pass
