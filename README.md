@@ -130,5 +130,5 @@ Drucker dashboard makes it easy to launch Drucker service on Kubernetes.
 
 You must read followings.
 
-1. https://github.com/drucker/drucker-parent/tree/master/docs/UsageDruckerOnKubernetes.md
+1. https://github.com/drucker/drucker-parent/tree/master/docs/Installation.md
 1. https://github.com/drucker/drucker-dashboard/README.md
