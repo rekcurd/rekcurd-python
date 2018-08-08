@@ -115,7 +115,7 @@ Write the necessity script to boot your Drucker service. Minimum requirement is 
 
 ```
 pip install -r ./drucker-grpc-proto/requirements.txt
-python ./drucker-grpc-proto/run_codegen.py
+sh ./drucker-grpc-proto/run_codegen.sh
 
 python server.py
 ```
