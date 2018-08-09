@@ -283,6 +283,8 @@ class DruckerWorkerServicer(drucker_pb2_grpc.DruckerWorkerServicer):
                              request_iterator: Iterator[drucker_pb2.BytesInput],
                              context: _Context
                              ) -> drucker_pb2.StringOutput:
+        """@deprecated
+        """
         for request in request_iterator:
             response = drucker_pb2.StringOutput()
             self.predictor.set_type(self.Type.BYTES, self.Type.STRING)

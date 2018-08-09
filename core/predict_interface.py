@@ -38,17 +38,23 @@ class EvaluateResult:
 
 class PredictInterface(metaclass=ABCMeta):
     def __init__(self):
-        self.type_input = None
-        self.type_output = None
+        self.type_input = None # @deprecated
+        self.type_output = None # @deprecated
 
     def set_type(self, type_input: Enum, type_output: Enum) -> None:
+        """@deprecated
+        """
         self.type_input = type_input
         self.type_output = type_output
 
     def get_type_input(self) -> Enum:
+        """@deprecated
+        """
         return self.type_input
 
     def get_type_output(self) -> Enum:
+        """@deprecated
+        """
         return self.type_output
 
     @abstractmethod

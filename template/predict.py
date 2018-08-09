@@ -36,12 +36,18 @@ class Predict(PredictInterface):
         self.load_model(get_model_path())
 
     def set_type(self, type_input: Enum, type_output: Enum) -> None:
+        """@deprecated
+        """
         super().set_type(type_input, type_output)
 
     def get_type_input(self) -> Enum:
+        """@deprecated
+        """
         return super().get_type_input()
 
     def get_type_output(self) -> Enum:
+        """@deprecated
+        """
         return super().get_type_output()
 
     def load_model(self, model_path: str = None) -> None:
