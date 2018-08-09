@@ -34,20 +34,12 @@ class ServiceLoggerInterface(metaclass=ABCMeta):
 
     # noinspection PyMethodMayBeStatic
     def to_str_from_request(self, request) -> str:
-        tmp = {'option': request.option.val}
-        if isinstance(request.input, (str, bytes)):
-            tmp['input'] = str(request.input)
-        else:
-            tmp['input'] = list(request.input)
+        input, option = request
+        tmp = {'input': input, 'option': option}
         return json.dumps(tmp)
 
     # noinspection PyMethodMayBeStatic
     def to_str_from_response(self, response) -> str:
-        tmp = {'option': response.option.val}
-        if isinstance(response.output, (str, bytes)):
-            tmp['output'] = str(response.output)
-            tmp['score'] = response.score
-        else:
-            tmp['output'] = list(response.output)
-            tmp['score'] = list(response.score)
+        output, score, option = response
+        tmp = {'output': output, 'score': score, 'option': option}
         return json.dumps(tmp)

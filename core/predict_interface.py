@@ -12,10 +12,10 @@ PredictScore = Union[float, List[float]]
 
 
 class PredictResult:
-    def __init__(self, label: PredictLabel, score: PredictScore, option: dict = None):
+    def __init__(self, label: PredictLabel, score: PredictScore, option: dict = {}):
         self.label = label
         self.score = score
-        self.option = json.dumps(option) if option is not None else '{}'
+        self.option = json.dumps(option)
 
 
 class EvaluateResult:
