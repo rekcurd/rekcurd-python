@@ -1,5 +1,8 @@
 # Change Log
 
+## [v0.3.2](https://github.com/drucker/drucker/tree/v0.3.2) (2018-08-15)
+[Full Changelog](https://github.com/drucker/drucker/compare/v0.3.1...v0.3.2)
+
 ## [v0.3.1](https://github.com/drucker/drucker/tree/v0.3.1) (2018-08-09)
 [Full Changelog](https://github.com/drucker/drucker/compare/v0.3.0...v0.3.1)
 
