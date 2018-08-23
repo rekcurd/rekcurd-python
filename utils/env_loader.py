@@ -10,6 +10,7 @@ class ServiceEnvType(Enum):
     DEVELOPMENT = 'development'
     BETA = 'beta'
     STAGING = 'staging'
+    SANDBOX = 'sandbox'
     PRODUCTION = 'production'
 
     @classmethod
@@ -20,6 +21,8 @@ class ServiceEnvType(Enum):
             return cls.BETA
         elif cls.STAGING.value == istr:
             return cls.STAGING
+        elif cls.SANDBOX.value == istr:
+            return cls.SANDBOX
         elif cls.PRODUCTION == istr:
             return cls.PRODUCTION
         else:
