@@ -18,7 +18,7 @@ app.port: 5000
 #     DRUCKER_SERVICE_NAME > app.service.name
 app.service.name: dev-001
 
-# This must be [development/beta/staging/production]
+# This must be [development/beta/staging/sandbox/production]
 # You can also determine an environment variable "DRUCKER_SERVICE_LEVEL".
 #   Priority is...
 #     DRUCKER_SERVICE_LEVEL > app.service.level
