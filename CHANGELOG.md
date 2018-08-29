@@ -1,5 +1,13 @@
 # Change Log
 
+## [v0.3.3](https://github.com/drucker/drucker/tree/v0.3.3) (2018-08-27)
+[Full Changelog](https://github.com/drucker/drucker/compare/v0.3.2...v0.3.3)
+
+**Merged pull requests:**
+
+- Add sandbox env [\#5](https://github.com/drucker/drucker/pull/5) ([keigohtr](https://github.com/keigohtr))
+- Refactor `sys.path.append` related code [\#3](https://github.com/drucker/drucker/pull/3) ([keigohtr](https://github.com/keigohtr))
+
 ## [v0.3.2](https://github.com/drucker/drucker/tree/v0.3.2) (2018-08-15)
 [Full Changelog](https://github.com/drucker/drucker/compare/v0.3.1...v0.3.2)
 
