@@ -27,10 +27,10 @@ def joblib_load_from_zip(zip_name: str, file_name: str):
 ### Expansion end.
 
 
-class Predict(Drucker):
+class MyApp(Drucker):
     def __init__(self, config_file: str = None):
         super().__init__(config_file)
-        self.logger = JsonSystemLogger(self)
+        self.logger = JsonSystemLogger(self.config)
         self.load_model()
 
     def set_type(self, type_input: Enum, type_output: Enum) -> None:
@@ -53,16 +53,14 @@ class Predict(Drucker):
             # FIXME: This is an example. Implement HERE!
             self.predictor = joblib.load(self.model_path)
             # FIXME: This is Another example. You can use archived file if your algorithm requires some files.
-            # MODEL_NAME = "20180206"
-            # zip_name = MODEL_HOME + MODEL_NAME + ".zip"
-            # file_name = MODEL_NAME+'/default.model'
-            # self.predictor = joblib_load_from_zip(zip_name, file_name)
+            # file_name = 'default.model'
+            # self.predictor = joblib_load_from_zip(self.model_path, file_name)
 
         except Exception as e:
             self.logger.error(str(e))
             self.logger.error(traceback.format_exc())
             self.predictor = None
-            if not SERVICE_FIRST_BOOT:
+            if not self.is_first_boot():
                 # noinspection PyProtectedMember
                 os._exit(-1)
 

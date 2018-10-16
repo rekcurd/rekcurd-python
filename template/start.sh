@@ -7,10 +7,5 @@ set -u
 
 echo "$ECHO_PREFIX Start.."
 
-pip install -r ./drucker-grpc-proto/requirements.txt
-sh ./drucker-grpc-proto/run_codegen.sh
-
-pip install -r ./drucker/requirements.txt
-
-pip install -r requirements.txt
-python server.py
+pip install -r ../requirements.txt
+python ./server.py

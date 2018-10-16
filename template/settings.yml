@@ -1,6 +1,9 @@
 # (Mainly) For non-kubernetes users.
 # Define the parameters below.
 
+# Debug flag
+test: True
+
 # This must be unique.
 # You can also determine an environment variable "DRUCKER_APPLICATION_NAME".
 #   Priority is...
