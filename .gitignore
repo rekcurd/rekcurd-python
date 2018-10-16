@@ -111,8 +111,8 @@ drucker_pb2.py
 drucker_pb2_grpc.py
 
 # sqlite
-db.sqlite3
-db.test.sqlite3
+drucker.sqlite3
+drucker.test.sqlite3
 
 # Mac OS temporary file
 .DS_Store
