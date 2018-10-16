@@ -9,18 +9,12 @@ import shutil
 import uuid
 from pathlib import Path
 
-import drucker_pb2
-import drucker_pb2_grpc
-
 from grpc._server import _Context
 from typing import Iterator
 
-from logger.logger_interface import SystemLoggerInterface
-from core.predict_interface import PredictInterface
-from utils.env_loader import SERVICE_NAME, SERVICE_LEVEL, APPLICATION_NAME, SERVICE_INFRA
-
-from models import db, get_model_path
-from models.model_assignment import ModelAssignment
+from .logger import SystemLoggerInterface
+from .drucker_worker import Drucker, db, ModelAssignment
+from .protobuf import drucker_pb2, drucker_pb2_grpc
 
 
 def error_handling(error_response):
@@ -83,9 +77,9 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
         Machine learning model
     """
 
-    def __init__(self, logger: SystemLoggerInterface, predictor: PredictInterface):
+    def __init__(self, logger: SystemLoggerInterface, app: Drucker):
         self.logger = logger
-        self.predictor = predictor
+        self.app = app
 
     def on_error(self, error: Exception):
         """ Postprocessing on error
@@ -106,9 +100,10 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
                     ) -> drucker_pb2.ServiceInfoResponse:
         """ Get service info.
         """
-        return drucker_pb2.ServiceInfoResponse(application_name=APPLICATION_NAME,
-                                               service_name=SERVICE_NAME,
-                                               service_level=SERVICE_LEVEL)
+        return drucker_pb2.ServiceInfoResponse(
+            application_name=self.app.config.APPLICATION_NAME,
+            service_name=self.app.config.SERVICE_NAME,
+            service_level=self.app.config.SERVICE_LEVEL)
 
     @error_handling(drucker_pb2.ModelResponse(status=0, message='Error: Uploading model file.'))
     def UploadModel(self,
@@ -118,7 +113,7 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
         """ Upload your latest ML model.
         """
         save_path = None
-        tmp_path = get_model_path(uuid.uuid4().hex)
+        tmp_path = self.app.get_model_path(uuid.uuid4().hex)
         Path(tmp_path).parent.mkdir(parents=True, exist_ok=True)
         with open(tmp_path, 'wb') as f:
             for request in request_iterator:
@@ -126,7 +121,7 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
                 model_data = request.data
                 f.write(model_data)
             f.close()
-        model_path = get_model_path(save_path)
+        model_path = self.app.get_model_path(save_path)
         Path(model_path).parent.mkdir(parents=True, exist_ok=True)
         shutil.move(tmp_path, model_path)
         return drucker_pb2.ModelResponse(status=1,
@@ -139,17 +134,17 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
                     ) -> drucker_pb2.ModelResponse:
         """ Switch your ML model to run.
         """
-        model_assignment = db.session.query(ModelAssignment).filter(ModelAssignment.service_name == SERVICE_NAME).one()
+        model_assignment = self.app.db.session.query(ModelAssignment).filter(ModelAssignment.service_name == self.app.config.SERVICE_NAME).one()
         model_assignment.model_path = request.path
         model_assignment.first_boot = False
-        db.session.commit()
-        model_path = get_model_path()
+        self.app.db.session.commit()
+        model_path = self.app.get_model_path()
 
         # :TODO: Use enum for SERVICE_INFRA
-        if SERVICE_INFRA == "kubernetes":
+        if self.app.config.SERVICE_INFRA == "kubernetes":
             pass
-        elif SERVICE_INFRA == "default":
-            self.predictor.load_model(model_path)
+        elif self.app.config.SERVICE_INFRA == "default":
+            self.app.load_model(model_path)
 
         return drucker_pb2.ModelResponse(status=1,
                                          message='Success: Switching model file.')
@@ -164,7 +159,7 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
         try:
             for evaluateModelRequest in request_iterator:
                 test_data = evaluateModelRequest.data
-                result = self.predictor.evaluate(test_data)
+                result = self.app.evaluate(test_data)
                 return drucker_pb2.EvaluateModelResponse(num=result.num,
                                                          accuracy=result.accuracy,
                                                          precision=result.precision,

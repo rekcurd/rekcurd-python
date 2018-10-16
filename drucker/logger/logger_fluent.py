@@ -8,26 +8,37 @@ from socket import gethostname
 
 from fluent import handler, sender
 
-from logger.logger_interface import SystemLoggerInterface, ServiceLoggerInterface
-from utils.env_loader import ServiceEnvType, SERVICE_LEVEL_ENUM, APPLICATION_NAME
+from drucker.utils import DruckerConfig
+from .logger_interface import SystemLoggerInterface, ServiceLoggerInterface
 
 
-class SystemLogger(SystemLoggerInterface):
+class FluentSystemLogger(SystemLoggerInterface):
 
-    def __init__(self, logger_name: str = 'drucker',
-                 log_level: int = logging.NOTSET, app_name: str = APPLICATION_NAME,
-                 app_env: ServiceEnvType = ServiceEnvType.DEVELOPMENT) -> None:
+    def __init__(self, config: DruckerConfig = None) -> None:
         """
-        constructor
-        :param logger_name:
-        :param log_level:
-        :param app_name:
-        :param app_env:
+        Constructor
+        :param config:
         """
         super().__init__()
+        self.config = config
+        logger_name = 'drucker'
+        log_level = logging.NOTSET
+        app_name = 'NONE'
+        app_env = 'NONE'
         self.log = logging.getLogger(logger_name)
         self.log.setLevel(log_level)
+        self.log.addHandler(self.__init_fluent_handler(app_name, app_env, log_level))
+        if config is not None:
+            self.init_app(config)
 
+    def init_app(self, config: DruckerConfig):
+        self.config = config
+        app_name = config.APPLICATION_NAM
+        app_env = config.SERVICE_LEVEL_ENUM.value
+        log_level = logging.NOTSET
+        self.log.addHandler(self.__init_fluent_handler(app_name, app_env, log_level))
+
+    def __init_fluent_handler(self, app_name: str, app_env: str, log_level: int):
         custom_format = {
             'host': gethostname(),
             'short_message': '%(message)s',
@@ -37,12 +48,11 @@ class SystemLogger(SystemLoggerInterface):
             'ml_service': app_name,
             'service_level': app_env
         }
-
         fluent_handler = handler.FluentHandler('drucker')
         formatter = handler.FluentRecordFormatter(custom_format)
         fluent_handler.setFormatter(formatter)
         fluent_handler.setLevel(log_level)
-        self.log.addHandler(fluent_handler)
+        return fluent_handler
 
     def exception(self, message: str) -> None:
         """
@@ -80,19 +90,27 @@ class SystemLogger(SystemLoggerInterface):
         self.log.warning(message, extra={'loglevel': 4})
 
 
-class ServiceLogger(ServiceLoggerInterface):
+class FluentServiceLogger(ServiceLoggerInterface):
 
-    def __init__(self, app_name: str = APPLICATION_NAME,
-                 app_env: ServiceEnvType = ServiceEnvType.DEVELOPMENT):
+    def __init__(self, config: DruckerConfig = None):
         """
-        constructor
-        :param app_name:
-        :param app_env:
+        Constructor
+        :param config:
         """
         super().__init__()
+        self.config = config
+        app_name = 'NONE'
+        app_env = 'NONE'
         self.logger = sender.FluentSender('drucker_service')
         self.ml_service = app_name
         self.service_level = app_env
+        if config is not None:
+            self.init_app(config)
+
+    def init_app(self, config: DruckerConfig):
+        self.config = config
+        self.ml_service = config.config.APPLICATION_NAME
+        self.service_level = config.config.SERVICE_LEVEL_ENUM.value
 
     def emit(self, request, response, suppress_log_inout: bool = False) -> None:
         """
@@ -123,7 +141,6 @@ class ServiceLogger(ServiceLoggerInterface):
             })
         except:
             try:
-                SystemLogger(logger_name="ServiceLogger", app_name=APPLICATION_NAME,
-                             app_env=SERVICE_LEVEL_ENUM).exception("can't write log")
+                FluentSystemLogger(self.config).exception("can't write log")
             except:
                 pass

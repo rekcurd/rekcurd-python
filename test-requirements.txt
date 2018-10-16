@@ -1,0 +1,17 @@
+grpcio==1.13.0
+grpcio-tools==1.13.0
+python-json-logger==0.1.9
+fluent-logger==0.9.3
+Flask==1.0.2
+PyYAML==3.12
+SQLAlchemy==1.2.7
+flask-sqlalchemy==2.3.2
+kubernetes==v5.0.0
+Flask-Testing==0.7.1
+Flask-Cors==3.0.4
+flask-restplus==0.11.0
+PyJWT==1.6.4
+Flask-JWT-Simple==0.0.3
+python-ldap==3.1.0
+numpy==1.14.3
+PyMySQL==0.8.0
