@@ -33,7 +33,7 @@ class FluentSystemLogger(SystemLoggerInterface):
 
     def init_app(self, config: DruckerConfig):
         self.config = config
-        app_name = config.APPLICATION_NAM
+        app_name = config.APPLICATION_NAME
         app_env = config.SERVICE_LEVEL_ENUM.value
         log_level = logging.NOTSET
         self.log.addHandler(self.__init_fluent_handler(app_name, app_env, log_level))
