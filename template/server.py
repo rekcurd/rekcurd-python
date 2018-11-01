@@ -6,39 +6,35 @@ import os
 import pathlib
 
 
-root_path = pathlib.Path(os.path.abspath(__file__)).parent
+root_path = pathlib.Path(os.path.abspath(__file__)).parent.parent
 sys.path.append(str(root_path))
-working_path = pathlib.Path(root_path, 'drucker')
-sys.path.append(str(working_path))
 
 
 from concurrent import futures
 import grpc
-import drucker_pb2_grpc
 import time
 
-from drucker.core.drucker_dashboard_servicer import DruckerDashboardServicer
-from drucker.core.drucker_worker_servicer import DruckerWorkerServicer
-from drucker.logger.logger_jsonlogger import SystemLogger, ServiceLogger
-from predict import Predict
-from drucker.utils.env_loader import SERVICE_LEVEL_ENUM, APPLICATION_NAME, SERVICE_PORT
+from drucker import DruckerDashboardServicer, DruckerWorkerServicer
+from drucker.logger import JsonSystemLogger, JsonServiceLogger
+from drucker.protobuf import drucker_pb2_grpc
+from template.app import MyApp
 
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 
 
 def serve():
-    system_logger = SystemLogger(logger_name="drucker", app_name=APPLICATION_NAME, app_env=SERVICE_LEVEL_ENUM)
-    service_logger = ServiceLogger(app_name=APPLICATION_NAME, app_env=SERVICE_LEVEL_ENUM)
-    predictor = Predict()
+    app = MyApp("./settings.yml")
+    system_logger = JsonSystemLogger(app.config)
+    service_logger = JsonServiceLogger(app.config)
     system_logger.info("Wake-up drucker worker.")
 
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
 
     drucker_pb2_grpc.add_DruckerDashboardServicer_to_server(
-        DruckerDashboardServicer(logger=system_logger, predictor=predictor), server)
+        DruckerDashboardServicer(logger=system_logger, app=app), server)
     drucker_pb2_grpc.add_DruckerWorkerServicer_to_server(
-        DruckerWorkerServicer(logger=service_logger, predictor=predictor), server)
-    server.add_insecure_port("[::]:{0}".format(SERVICE_PORT))
+        DruckerWorkerServicer(logger=service_logger, app=app), server)
+    server.add_insecure_port("[::]:{0}".format(app.config.SERVICE_PORT))
     server.start()
     try:
         while True:

@@ -8,11 +8,11 @@ from socket import gethostname
 
 from pythonjsonlogger import jsonlogger
 
-from logger.logger_interface import SystemLoggerInterface, ServiceLoggerInterface
-from utils.env_loader import ServiceEnvType, SERVICE_LEVEL_ENUM, APPLICATION_NAME
+from drucker.utils import DruckerConfig
+from .logger_interface import SystemLoggerInterface, ServiceLoggerInterface
 
 
-class SystemLogger(SystemLoggerInterface):
+class JsonSystemLogger(SystemLoggerInterface):
     class JsonFormatter(jsonlogger.JsonFormatter):
         def parse(self):
             return [
@@ -31,17 +31,18 @@ class SystemLogger(SystemLoggerInterface):
             log_record['timestamp'] = int(time.time() * 1000) / 1000
             log_record['service'] = 'drucker'
 
-    def __init__(self, logger_name: str = 'drucker',
-                 log_level: int = logging.NOTSET, app_name: str = APPLICATION_NAME,
-                 app_env: ServiceEnvType = ServiceEnvType.DEVELOPMENT) -> None:
+    def __init__(self, config: DruckerConfig = None) -> None:
         """
-        constructor
-        :param logger_name:
-        :param log_level:
-        :param app_name:
-        :param app_env:
+        Constructor
+        :param config:
         """
         super().__init__()
+        self.config = config
+        logger_name = 'drucker'
+        log_level = logging.NOTSET
+        app_name = 'NONE'
+        app_env = 'NONE'
+
         self.log = logging.getLogger(logger_name)
         handler = logging.StreamHandler()
         formatter = self.JsonFormatter()
@@ -50,6 +51,13 @@ class SystemLogger(SystemLoggerInterface):
         self.log.setLevel(log_level)
         self.ml_service = app_name
         self.service_level = app_env
+        if config is not None:
+            self.init_app(config)
+
+    def init_app(self, config: DruckerConfig):
+        self.config = config
+        self.ml_service = config.APPLICATION_NAME
+        self.service_level = config.SERVICE_LEVEL_ENUM.value
 
     def exception(self, message: str) -> None:
         """
@@ -98,7 +106,7 @@ class SystemLogger(SystemLoggerInterface):
                                          'service_level': self.service_level})
 
 
-class ServiceLogger(ServiceLoggerInterface):
+class JsonServiceLogger(ServiceLoggerInterface):
     class JsonFormatter(jsonlogger.JsonFormatter):
         def parse(self):
             return [
@@ -119,12 +127,16 @@ class ServiceLogger(ServiceLoggerInterface):
             log_record['timestamp'] = int(time.time() * 1000) / 1000
             log_record['service'] = 'drucker'
 
-    def __init__(self, app_name: str = APPLICATION_NAME,
-                 app_env: ServiceEnvType = ServiceEnvType.DEVELOPMENT):
+    def __init__(self, config: DruckerConfig = None):
         """
-        constructor
+        Constructor
+        :param config:
         """
         super().__init__()
+        self.config = config
+        app_name = 'NONE'
+        app_env = 'NONE'
+
         self.log = logging.getLogger("drucker.service")
         handler = logging.StreamHandler()
         formatter = self.JsonFormatter()
@@ -133,6 +145,13 @@ class ServiceLogger(ServiceLoggerInterface):
         self.log.setLevel(logging.DEBUG)
         self.ml_service = app_name
         self.service_level = app_env
+        if config is not None:
+            self.init_app(config)
+
+    def init_app(self, config: DruckerConfig):
+        self.config = config
+        self.ml_service = config.APPLICATION_NAME
+        self.service_level = config.SERVICE_LEVEL_ENUM.value
 
     def emit(self, request, response, suppress_log_inout: bool = False) -> None:
         """
@@ -154,7 +173,6 @@ class ServiceLogger(ServiceLoggerInterface):
                                           'ml_output': ml_output})
         except Exception:
             try:
-                SystemLogger(logger_name="ServiceLogger", app_name=APPLICATION_NAME,
-                             app_env=SERVICE_LEVEL_ENUM).exception("can't write log")
+                JsonSystemLogger(self.config).exception("can't write log")
             except:
                 pass

@@ -1,0 +1,23 @@
+# ref: https://docs.travis-ci.com/user/languages/python
+language: python
+dist: trusty
+sudo: true
+services:
+- docker
+
+matrix:
+  include:
+  - python: 3.4
+    env: TOXENV=py34
+  - python: 3.5
+    env: TOXENV=py35
+  - python: 3.6
+    env: TOXENV=py36
+  - python: 3.6
+    env: TOXENV=coverage,codecov
+
+install:
+- pip install tox
+
+script:
+- tox

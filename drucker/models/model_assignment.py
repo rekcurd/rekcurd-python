@@ -2,7 +2,7 @@ from sqlalchemy import (
     Column, String, Boolean, UniqueConstraint
 )
 
-from models import db
+from .dao import db
 
 
 class ModelAssignment(db.ModelBase):

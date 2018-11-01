@@ -1,0 +1,7 @@
+test: True
+app.name: test
+app.service.name: test-001
+app.service.level: development
+app.modeldir: ./test-model
+app.modelfile: default.model
+use.db: sqlite

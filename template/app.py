@@ -8,10 +8,9 @@ import io
 
 from enum import Enum
 
-from drucker.logger.logger_jsonlogger import SystemLogger
-from drucker.core.predict_interface import PredictInterface, PredictLabel, PredictResult, EvaluateResult
-from drucker.utils.env_loader import SERVICE_LEVEL_ENUM, APPLICATION_NAME
-from drucker.models import get_model_path, SERVICE_FIRST_BOOT
+from drucker.logger import JsonSystemLogger
+from drucker import Drucker
+from drucker.utils import PredictLabel, PredictResult, EvaluateResult
 
 ### Expansion start. You can add your necessity libraries.
 import numpy as np
@@ -28,12 +27,11 @@ def joblib_load_from_zip(zip_name: str, file_name: str):
 ### Expansion end.
 
 
-class Predict(PredictInterface):
-    def __init__(self):
-        super().__init__()
-        self.predictor = None
-        self.logger = SystemLogger(logger_name="drucker_predict", app_name=APPLICATION_NAME, app_env=SERVICE_LEVEL_ENUM)
-        self.load_model(get_model_path())
+class MyApp(Drucker):
+    def __init__(self, config_file: str = None):
+        super().__init__(config_file)
+        self.logger = JsonSystemLogger(self.config)
+        self.load_model()
 
     def set_type(self, type_input: Enum, type_output: Enum) -> None:
         super().set_type(type_input, type_output)
@@ -44,29 +42,25 @@ class Predict(PredictInterface):
     def get_type_output(self) -> Enum:
         return super().get_type_output()
 
-    def load_model(self, model_path: str = None) -> None:
+    def load_model(self) -> None:
         """ override
         Load ML model.
-
-        :param model_path:
         :return:
         """
-        assert model_path is not None, \
+        assert self.model_path is not None, \
             'Please specify your ML model path'
         try:
             # FIXME: This is an example. Implement HERE!
-            self.predictor = joblib.load(model_path)
+            self.predictor = joblib.load(self.model_path)
             # FIXME: This is Another example. You can use archived file if your algorithm requires some files.
-            # MODEL_NAME = "20180206"
-            # zip_name = MODEL_HOME + MODEL_NAME + ".zip"
-            # file_name = MODEL_NAME+'/default.model'
-            # self.predictor = joblib_load_from_zip(zip_name, file_name)
+            # file_name = 'default.model'
+            # self.predictor = joblib_load_from_zip(self.model_path, file_name)
 
         except Exception as e:
             self.logger.error(str(e))
             self.logger.error(traceback.format_exc())
             self.predictor = None
-            if not SERVICE_FIRST_BOOT:
+            if not self.is_first_boot():
                 # noinspection PyProtectedMember
                 os._exit(-1)
 
