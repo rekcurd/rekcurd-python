@@ -1,4 +1,10 @@
 # Drucker
+
+[![Build Status](https://travis-ci.com/drucker/drucker.svg?branch=master)](https://travis-ci.com/drucker/drucker)
+[![PyPI version](https://badge.fury.io/py/drucker.svg)](https://badge.fury.io/py/drucker)
+[![codecov](https://codecov.io/gh/drucker/drucker/branch/master/graph/badge.svg)](https://codecov.io/gh/drucker/drucker "Non-generated packages only")
+[![pypi supported versions](https://img.shields.io/pypi/pyversions/drucker.svg)](https://pypi.python.org/pypi/drucker)
+
 Drucker is a framework of serving machine learning module. Drucker makes it easy to serve, manage and integrate your ML models into your existing services. Moreover, Drucker can be used on Kubernetes.
 
 ## Parent Project
