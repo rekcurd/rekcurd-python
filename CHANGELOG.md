@@ -1,5 +1,15 @@
 # Change Log
 
+## [v0.4.0](https://github.com/drucker/drucker/tree/v0.4.0) (2018-11-07)
+[Full Changelog](https://github.com/drucker/drucker/compare/v0.3.4...v0.4.0)
+
+**Merged pull requests:**
+
+- Add badge [\#9](https://github.com/drucker/drucker/pull/9) ([keigohtr](https://github.com/keigohtr))
+- Create CONTRIBUTING.md [\#8](https://github.com/drucker/drucker/pull/8) ([syleeeee](https://github.com/syleeeee))
+- Create CODE\_OF\_CONDUCT.md [\#7](https://github.com/drucker/drucker/pull/7) ([syleeeee](https://github.com/syleeeee))
+- Pipnize drucker [\#6](https://github.com/drucker/drucker/pull/6) ([keigohtr](https://github.com/keigohtr))
+
 ## [v0.3.4](https://github.com/drucker/drucker/tree/v0.3.4) (2018-08-29)
 [Full Changelog](https://github.com/drucker/drucker/compare/v0.3.3...v0.3.4)
 
