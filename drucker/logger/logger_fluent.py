@@ -109,8 +109,8 @@ class FluentServiceLogger(ServiceLoggerInterface):
 
     def init_app(self, config: DruckerConfig):
         self.config = config
-        self.ml_service = config.config.APPLICATION_NAME
-        self.service_level = config.config.SERVICE_LEVEL_ENUM.value
+        self.ml_service = config.APPLICATION_NAME
+        self.service_level = config.SERVICE_LEVEL_ENUM.value
 
     def emit(self, request, response, suppress_log_inout: bool = False) -> None:
         """
