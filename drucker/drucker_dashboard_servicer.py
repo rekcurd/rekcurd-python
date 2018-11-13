@@ -155,38 +155,29 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
         return drucker_pb2.ModelResponse(status=1,
                                          message='Success: Switching model file.')
 
+    @error_handling(drucker_pb2.EvaluateModelResponse(
+        metrics=drucker_pb2.EvaluationMetrics(num=0, accuracy=[0.0], precision=[0.0], recall=[0.0], fvalue=[0.0], option={})))
     def EvaluateModel(self,
                       request_iterator: Iterator[drucker_pb2.EvaluateModelRequest],
                       context: _Context
                       ) -> drucker_pb2.EvaluateModelResponse:
         """ Evaluate your ML model and save result.
         """
-        try:
-            first_req = next(request_iterator)
-            save_path = first_req.data_path
+        first_req = next(request_iterator)
+        save_path = first_req.data_path
 
-            test_data_iter = chain([first_req.data], (r.data for r in request_iterator))
-            result, details = self.app.evaluate(test_data_iter)
-            metrics = drucker_pb2.EvaluationMetrics(num=result.num,
-                                                    accuracy=result.accuracy,
-                                                    precision=result.precision,
-                                                    recall=result.recall,
-                                                    fvalue=result.fvalue,
-                                                    option=result.option)
+        test_data_iter = chain([first_req.data], (r.data for r in request_iterator))
+        result, details = self.app.evaluate(test_data_iter)
+        metrics = drucker_pb2.EvaluationMetrics(num=result.num,
+                                                accuracy=result.accuracy,
+                                                precision=result.precision,
+                                                recall=result.recall,
+                                                fvalue=result.fvalue,
+                                                option=result.option)
 
-            with open(save_path + self.EVALUATE_RESULT, 'wb') as f:
-                pickle.dump(result, f)
-            with open(save_path + self.EVALUATE_DETAIL, 'wb') as f:
-                pickle.dump(details, f)
+        with open(save_path + self.EVALUATE_RESULT, 'wb') as f:
+            pickle.dump(result, f)
+        with open(save_path + self.EVALUATE_DETAIL, 'wb') as f:
+            pickle.dump(details, f)
 
-            return drucker_pb2.EvaluateModelResponse(metrics=metrics)
-        except Exception as e:
-            self.logger.error(str(e))
-            self.logger.error(traceback.format_exc())
-            metrics = drucker_pb2.EvaluationMetrics(num=0,
-                                                    accuracy=[0.0],
-                                                    precision=[0.0],
-                                                    recall=[0.0],
-                                                    fvalue=[0.0],
-                                                    option={})
-            return drucker_pb2.EvaluateModelResponse(metrics=metrics)
+        return drucker_pb2.EvaluateModelResponse(metrics=metrics)
