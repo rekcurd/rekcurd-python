@@ -8,6 +8,7 @@ import types
 import shutil
 import uuid
 from itertools import chain
+import pickle
 from pathlib import Path
 
 from grpc._server import _Context
@@ -77,6 +78,10 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
     - Models
         Machine learning model
     """
+
+    # postfix for evaluate result
+    EVALUATE_RESULT = '_eval_res.pkl'
+    EVALUATE_DETAIL = '_eval_detail.pkl'
 
     def __init__(self, logger: SystemLoggerInterface, app: Drucker):
         self.logger = logger
@@ -154,21 +159,25 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
                       request_iterator: Iterator[drucker_pb2.EvaluateModelRequest],
                       context: _Context
                       ) -> drucker_pb2.EvaluateModelResponse:
-        """ Evaluate your ML model.
-        :TODO: in detail.
+        """ Evaluate your ML model and save result.
         """
         try:
             first_req = next(request_iterator)
             save_path = first_req.data_path
 
             test_data_iter = chain([first_req.data], (r.data for r in request_iterator))
-            result = self.app.evaluate(test_data_iter)
+            result, details = self.app.evaluate(test_data_iter)
             metrics = drucker_pb2.EvaluationMetrics(num=result.num,
                                                     accuracy=result.accuracy,
                                                     precision=result.precision,
                                                     recall=result.recall,
                                                     fvalue=result.fvalue,
                                                     option=result.option)
+
+            with open(save_path + self.EVALUATE_RESULT, 'wb') as f:
+                pickle.dump(result, f)
+            with open(save_path + self.EVALUATE_DETAIL, 'wb') as f:
+                pickle.dump(details, f)
 
             return drucker_pb2.EvaluateModelResponse(metrics=metrics)
         except Exception as e:

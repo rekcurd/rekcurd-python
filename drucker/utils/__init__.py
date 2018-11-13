@@ -6,7 +6,7 @@ import yaml
 import json
 
 from enum import Enum
-from typing import Union, List, Dict
+from typing import Union, List, Dict, NamedTuple
 
 
 PredictLabel = Union[str, bytes, List[str], List[int], List[float]]
@@ -99,3 +99,10 @@ class EvaluateResult:
             self.recall = recall
             self.fvalue = fvalue
             self.option = option
+
+
+class EvaluateDetail(NamedTuple):
+    input: PredictLabel
+    label: PredictLabel
+    score: PredictScore
+    is_correct: bool
