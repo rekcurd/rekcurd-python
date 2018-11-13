@@ -6,7 +6,7 @@ import yaml
 import json
 
 from enum import Enum
-from typing import Union, List
+from typing import Union, List, Dict
 
 
 PredictLabel = Union[str, bytes, List[str], List[int], List[float]]
@@ -83,17 +83,19 @@ class PredictResult:
 
 class EvaluateResult:
     def __init__(self, num: int = None, accuracy: float = None,
-                 precision: list = None, recall: list = None,
-                 fvalue: list = None):
+                 precision: List[float] = None, recall: List[float] = None,
+                 fvalue: List[float] = None, option: Dict[str, float] = {}):
         if num is None:
             self.num = 0
             self.accuracy = 0.0
-            self.precision = [0]
-            self.recall = [0]
-            self.fvalue = [0]
+            self.precision = [0.0]
+            self.recall = [0.0]
+            self.fvalue = [0.0]
+            self.option = {}
         else:
             self.num = num
             self.accuracy = accuracy
             self.precision = precision
             self.recall = recall
             self.fvalue = fvalue
+            self.option = option

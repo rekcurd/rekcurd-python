@@ -7,6 +7,7 @@ import grpc
 import types
 import shutil
 import uuid
+from itertools import chain
 from pathlib import Path
 
 from grpc._server import _Context
@@ -157,19 +158,26 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
         :TODO: in detail.
         """
         try:
-            for evaluateModelRequest in request_iterator:
-                test_data = evaluateModelRequest.data
-                result = self.app.evaluate(test_data)
-                return drucker_pb2.EvaluateModelResponse(num=result.num,
-                                                         accuracy=result.accuracy,
-                                                         precision=result.precision,
-                                                         recall=result.recall,
-                                                         fvalue=result.fvalue)
+            first_req = next(request_iterator)
+            save_path = first_req.data_path
+
+            test_data_iter = chain([first_req.data], (r.data for r in request_iterator))
+            result = self.app.evaluate(test_data_iter)
+            metrics = drucker_pb2.EvaluationMetrics(num=result.num,
+                                                    accuracy=result.accuracy,
+                                                    precision=result.precision,
+                                                    recall=result.recall,
+                                                    fvalue=result.fvalue,
+                                                    option=result.option)
+
+            return drucker_pb2.EvaluateModelResponse(metrics=metrics)
         except Exception as e:
             self.logger.error(str(e))
             self.logger.error(traceback.format_exc())
-            return drucker_pb2.EvaluateModelResponse(num=0,
-                                                     accuracy=0,
-                                                     precision=0,
-                                                     recall=0,
-                                                     fvalue=0)
+            metrics = drucker_pb2.EvaluationMetrics(num=0,
+                                                    accuracy=[0.0],
+                                                    precision=[0.0],
+                                                    recall=[0.0],
+                                                    fvalue=[0.0],
+                                                    option={})
+            return drucker_pb2.EvaluateModelResponse(metrics=metrics)
