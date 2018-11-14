@@ -42,6 +42,7 @@ class DruckerConfig:
         self.SERVICE_LEVEL_ENUM = ServiceEnvType.to_Enum(service_level)
         self.SERVICE_INFRA = os.getenv("DRUCKER_SERVICE_INFRA", "default")
         self.DIR_MODEL = os.getenv("DRUCKER_SERVICE_MODEL_DIR", config.get("app.modeldir", "./model"))
+        self.DIR_EVAL = os.getenv("DRUCKER_SERVICE_EVAL_DIR", config.get("app.evaldir", "./eval"))
         self.FILE_MODEL = os.getenv("DRUCKER_SERVICE_MODEL_FILE", config.get("app.modelfile", "default.model"))
         self.DB_MODE = os.getenv('DRUCKER_DB_MODE', config.get('use.db', "sqlite"))
         self.DB_MYSQL_HOST = os.getenv('DRUCKER_DB_MYSQL_HOST', config.get('db.mysql.host', ""))

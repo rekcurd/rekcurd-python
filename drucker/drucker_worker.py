@@ -59,6 +59,9 @@ class Drucker(metaclass=ABCMeta):
                 model_path = result.model_path
         return "{0}/{1}/{2}".format(self.config.DIR_MODEL, self.config.APPLICATION_NAME, model_path)
 
+    def get_eval_path(self, eval_path: str) -> str:
+        return "{0}/{1}/{2}".format(self.config.DIR_EVAL, self.config.APPLICATION_NAME, eval_path)
+
     def set_type(self, type_input: Enum, type_output: Enum) -> None:
         self.__type_input = type_input
         self.__type_output = type_output
