@@ -7,7 +7,6 @@ import grpc
 import types
 import shutil
 import uuid
-from itertools import chain
 import pickle
 from pathlib import Path
 
@@ -166,8 +165,8 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
         first_req = next(request_iterator)
         save_path = first_req.data_path
 
-        test_data_iter = chain([first_req.data], (r.data for r in request_iterator))
-        result, details = self.app.evaluate(test_data_iter)
+        test_data = b''.join([first_req.data] + [r.data for r in request_iterator])
+        result, details = self.app.evaluate(test_data)
         metrics = drucker_pb2.EvaluationMetrics(num=result.num,
                                                 accuracy=result.accuracy,
                                                 precision=result.precision,

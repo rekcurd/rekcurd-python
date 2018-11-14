@@ -4,7 +4,7 @@
 
 from abc import ABCMeta, abstractmethod
 from enum import Enum
-from typing import Iterable, List, Tuple
+from typing import List, Tuple
 from sqlalchemy.sql import exists
 
 from .utils import DruckerConfig, PredictLabel, PredictResult, EvaluateResult, EvaluateDetail
@@ -78,5 +78,5 @@ class Drucker(metaclass=ABCMeta):
         raise NotImplemented()
 
     @abstractmethod
-    def evaluate(self, files: Iterable[bytes]) -> Tuple[EvaluateResult, List[EvaluateDetail]]:
+    def evaluate(self, file: bytes) -> Tuple[EvaluateResult, List[EvaluateDetail]]:
         raise NotImplemented()
