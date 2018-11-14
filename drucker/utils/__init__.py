@@ -104,5 +104,5 @@ class EvaluateResult:
 class EvaluateDetail(NamedTuple):
     input: PredictLabel
     label: PredictLabel
-    score: PredictScore
+    result: PredictResult
     is_correct: bool
