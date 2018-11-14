@@ -155,7 +155,7 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
                                          message='Success: Switching model file.')
 
     @error_handling(drucker_pb2.EvaluateModelResponse(
-        metrics=drucker_pb2.EvaluationMetrics(num=0, accuracy=[0.0], precision=[0.0], recall=[0.0], fvalue=[0.0], option={})))
+        metrics=drucker_pb2.EvaluationMetrics(num=0, accuracy=0.0, precision=[0.0], recall=[0.0], fvalue=[0.0], option={})))
     def EvaluateModel(self,
                       request_iterator: Iterator[drucker_pb2.EvaluateModelRequest],
                       context: _Context
