@@ -173,16 +173,11 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
                                                 recall=result.recall,
                                                 fvalue=result.fvalue,
                                                 option=result.option)
-        tmp_path = self.app.get_eval_path(uuid.uuid4().hex)
-        def write_and_move(postfix, data):
-            path = tmp_path + postfix
-            Path(path).parent.mkdir(parents=True, exist_ok=True)
-            with open(path, 'wb') as f:
-                pickle.dump(data, f)
-            eval_path = self.app.get_eval_path(save_path + postfix)
-            Path(eval_path).parent.mkdir(parents=True, exist_ok=True)
-            shutil.move(path, eval_path)
-        write_and_move(self.EVALUATE_RESULT, result)
-        write_and_move(self.EVALUATE_DETAIL, details)
+        eval_path = self.app.get_eval_path(save_path)
+        Path(eval_path).parent.mkdir(parents=True, exist_ok=True)
+        with open(eval_path + self.EVALUATE_RESULT, 'wb') as f:
+            pickle.dump(result, f)
+        with open(eval_path + self.EVALUATE_DETAIL, 'wb') as f:
+            pickle.dump(details, f)
 
         return drucker_pb2.EvaluateModelResponse(metrics=metrics)
