@@ -108,7 +108,7 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
         return drucker_pb2.ServiceInfoResponse(
             application_name=self.app.config.APPLICATION_NAME,
             service_name=self.app.config.SERVICE_NAME,
-            service_level=self.app.config.SERVICE_LEVEL)
+            service_level=self.app.config.SERVICE_LEVEL_ENUM.value)
 
     @error_handling(drucker_pb2.ModelResponse(status=0, message='Error: Uploading model file.'))
     def UploadModel(self,
