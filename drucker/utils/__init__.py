@@ -14,27 +14,12 @@ PredictScore = Union[float, List[float]]
 
 
 class DruckerConfig:
-    TEST_MODE = None
-    SERVICE_PORT = None
-    APPLICATION_NAME = None
-    SERVICE_NAME = None
-    SERVICE_LEVEL_ENUM = None
-    SERVICE_INFRA = None
-    DIR_MODEL = None
-    FILE_MODEL = None
-    DB_MODE = None
-    DB_MYSQL_HOST = None
-    DB_MYSQL_PORT = None
-    DB_MYSQL_DBNAME = None
-    DB_MYSQL_USER = None
-    DB_MYSQL_PASSWORD = None
-
     def __init__(self, config_file: str):
         settings_yaml = os.getenv("DRUCKER_SETTINGS_YAML", config_file)
         config = dict()
         if settings_yaml is not None:
             config = yaml.load(open(settings_yaml, 'r'))
-        self.TEST_MODE = os.getenv("DRUCKER_TEST_MODE", config.get("test", "False"))
+        self.TEST_MODE = os.getenv("DRUCKER_TEST_MODE", config.get("test", "False")) == 'True'
         self.SERVICE_PORT = os.getenv("DRUCKER_SERVICE_PORT", config.get("app.port", "5000"))
         self.APPLICATION_NAME = os.getenv("DRUCKER_APPLICATION_NAME", config["app.name"])
         self.SERVICE_NAME = os.getenv("DRUCKER_SERVICE_NAME", config["app.service.name"])
