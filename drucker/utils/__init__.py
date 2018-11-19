@@ -20,7 +20,7 @@ class DruckerConfig:
         config = dict()
         if settings_yaml is not None:
             config = yaml.load(open(settings_yaml, 'r'))
-        self.TEST_MODE = os.getenv("DRUCKER_TEST_MODE", config.get("test", "False")) == 'True'
+        self.TEST_MODE = os.getenv("DRUCKER_TEST_MODE", str(config.get("test", "False"))) == 'True'
         self.SERVICE_PORT = os.getenv("DRUCKER_SERVICE_PORT", config.get("app.port", "5000"))
         self.APPLICATION_NAME = os.getenv("DRUCKER_APPLICATION_NAME", config["app.name"])
         self.SERVICE_NAME = os.getenv("DRUCKER_SERVICE_NAME", config["app.service.name"])
