@@ -14,7 +14,7 @@
 
 from setuptools import setup
 
-VERSION = "0.4.0"
+VERSION = "0.4.1"
 PACKAGE_NAME = "drucker"
 DEVELOPMENT_STATUS = "3 - Alpha"
 
@@ -71,5 +71,6 @@ setup(
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
         ],
 )
