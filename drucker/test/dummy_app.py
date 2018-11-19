@@ -1,9 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from typing import List, Tuple
 
 from drucker import Drucker
-from drucker.utils import PredictLabel, PredictResult, EvaluateResult
+from drucker.utils import PredictLabel, PredictResult, EvaluateResult, EvaluateDetail
 
 
 class DummyApp(Drucker):
@@ -16,5 +17,5 @@ class DummyApp(Drucker):
     def predict(self, input: PredictLabel, option: dict = None) -> PredictResult:
         pass
 
-    def evaluate(self, file: bytes) -> EvaluateResult:
+    def evaluate(self, file: bytes) -> Tuple[EvaluateResult, List[EvaluateDetail]]:
         pass
