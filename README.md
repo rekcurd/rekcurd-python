@@ -209,6 +209,7 @@ $ sh start.sh
 ### Test
 ```
 $ python -m unittest drucker/test/test_worker_servicer.py
+$ python -m unittest drucker/test/test_dashboard_servicer.py
 ```
 
 ## Drucker on Kubernetes

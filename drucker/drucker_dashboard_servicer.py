@@ -7,6 +7,7 @@ import grpc
 import types
 import shutil
 import uuid
+import pickle
 from pathlib import Path
 
 from grpc._server import _Context
@@ -77,6 +78,10 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
         Machine learning model
     """
 
+    # postfix for evaluate result
+    EVALUATE_RESULT = '_eval_res.pkl'
+    EVALUATE_DETAIL = '_eval_detail.pkl'
+
     def __init__(self, logger: SystemLoggerInterface, app: Drucker):
         self.logger = logger
         self.app = app
@@ -103,7 +108,7 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
         return drucker_pb2.ServiceInfoResponse(
             application_name=self.app.config.APPLICATION_NAME,
             service_name=self.app.config.SERVICE_NAME,
-            service_level=self.app.config.SERVICE_LEVEL)
+            service_level=self.app.config.SERVICE_LEVEL_ENUM.value)
 
     @error_handling(drucker_pb2.ModelResponse(status=0, message='Error: Uploading model file.'))
     def UploadModel(self,
@@ -149,27 +154,29 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
         return drucker_pb2.ModelResponse(status=1,
                                          message='Success: Switching model file.')
 
+    @error_handling(drucker_pb2.EvaluateModelResponse(metrics=drucker_pb2.EvaluationMetrics()))
     def EvaluateModel(self,
                       request_iterator: Iterator[drucker_pb2.EvaluateModelRequest],
                       context: _Context
                       ) -> drucker_pb2.EvaluateModelResponse:
-        """ Evaluate your ML model.
-        :TODO: in detail.
+        """ Evaluate your ML model and save result.
         """
-        try:
-            for evaluateModelRequest in request_iterator:
-                test_data = evaluateModelRequest.data
-                result = self.app.evaluate(test_data)
-                return drucker_pb2.EvaluateModelResponse(num=result.num,
-                                                         accuracy=result.accuracy,
-                                                         precision=result.precision,
-                                                         recall=result.recall,
-                                                         fvalue=result.fvalue)
-        except Exception as e:
-            self.logger.error(str(e))
-            self.logger.error(traceback.format_exc())
-            return drucker_pb2.EvaluateModelResponse(num=0,
-                                                     accuracy=0,
-                                                     precision=0,
-                                                     recall=0,
-                                                     fvalue=0)
+        first_req = next(request_iterator)
+        save_path = first_req.data_path
+
+        test_data = b''.join([first_req.data] + [r.data for r in request_iterator])
+        result, details = self.app.evaluate(test_data)
+        metrics = drucker_pb2.EvaluationMetrics(num=result.num,
+                                                accuracy=result.accuracy,
+                                                precision=result.precision,
+                                                recall=result.recall,
+                                                fvalue=result.fvalue,
+                                                option=result.option)
+        eval_path = self.app.get_eval_path(save_path)
+        Path(eval_path).parent.mkdir(parents=True, exist_ok=True)
+        with open(eval_path + self.EVALUATE_RESULT, 'wb') as f:
+            pickle.dump(result, f)
+        with open(eval_path + self.EVALUATE_DETAIL, 'wb') as f:
+            pickle.dump(details, f)
+
+        return drucker_pb2.EvaluateModelResponse(metrics=metrics)
