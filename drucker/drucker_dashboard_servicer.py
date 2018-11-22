@@ -99,7 +99,7 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
         self.logger.error(str(error))
         self.logger.error(traceback.format_exc())
 
-    def check_invalid_upload(self, filename: str) -> bool:
+    def is_valid_upload_filename(self, filename: str) -> bool:
         if Path(filename).name == filename:
             return True
         return False
@@ -131,7 +131,7 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
                 model_data = request.data
                 f.write(model_data)
             f.close()
-        if not self.check_invalid_upload(save_path):
+        if not self.is_valid_upload_filename(save_path):
             raise Exception(f'Error: Invalid model path specified -> {save_path}')
         model_path = self.app.get_model_path(save_path)
         Path(model_path).parent.mkdir(parents=True, exist_ok=True)
@@ -170,7 +170,7 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
         """
         first_req = next(request_iterator)
         save_path = first_req.data_path
-        if not self.check_invalid_upload(save_path):
+        if not self.is_valid_upload_filename(save_path):
             raise Exception(f'Error: Invalid evaluation file specified -> {save_path}')
 
         test_data = b''.join([first_req.data] + [r.data for r in request_iterator])
