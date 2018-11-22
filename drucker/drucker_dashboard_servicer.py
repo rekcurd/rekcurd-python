@@ -122,17 +122,20 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
                     ) -> drucker_pb2.ModelResponse:
         """ Upload your latest ML model.
         """
-        save_path = None
+        first_req = next(request_iterator)
+        save_path = first_req.path
+        if not self.is_valid_upload_filename(save_path):
+            raise Exception(f'Error: Invalid model path specified -> {save_path}')
+
         tmp_path = self.app.get_model_path(uuid.uuid4().hex)
         Path(tmp_path).parent.mkdir(parents=True, exist_ok=True)
         with open(tmp_path, 'wb') as f:
+            f.write(first_req.data)
             for request in request_iterator:
-                save_path = request.path
-                model_data = request.data
-                f.write(model_data)
+                f.write(request.data)
+            del first_req
             f.close()
-        if not self.is_valid_upload_filename(save_path):
-            raise Exception(f'Error: Invalid model path specified -> {save_path}')
+
         model_path = self.app.get_model_path(save_path)
         Path(model_path).parent.mkdir(parents=True, exist_ok=True)
         shutil.move(tmp_path, model_path)
