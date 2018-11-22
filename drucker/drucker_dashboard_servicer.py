@@ -99,6 +99,11 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
         self.logger.error(str(error))
         self.logger.error(traceback.format_exc())
 
+    def is_valid_upload_filename(self, filename: str) -> bool:
+        if Path(filename).name == filename:
+            return True
+        return False
+
     def ServiceInfo(self,
                     request: drucker_pb2.ServiceInfoRequest,
                     context: _Context
@@ -117,15 +122,20 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
                     ) -> drucker_pb2.ModelResponse:
         """ Upload your latest ML model.
         """
-        save_path = None
+        first_req = next(request_iterator)
+        save_path = first_req.path
+        if not self.is_valid_upload_filename(save_path):
+            raise Exception(f'Error: Invalid model path specified -> {save_path}')
+
         tmp_path = self.app.get_model_path(uuid.uuid4().hex)
         Path(tmp_path).parent.mkdir(parents=True, exist_ok=True)
         with open(tmp_path, 'wb') as f:
+            f.write(first_req.data)
             for request in request_iterator:
-                save_path = request.path
-                model_data = request.data
-                f.write(model_data)
+                f.write(request.data)
+            del first_req
             f.close()
+
         model_path = self.app.get_model_path(save_path)
         Path(model_path).parent.mkdir(parents=True, exist_ok=True)
         shutil.move(tmp_path, model_path)
@@ -139,17 +149,20 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
                     ) -> drucker_pb2.ModelResponse:
         """ Switch your ML model to run.
         """
+        if not self.is_valid_upload_filename(request.path):
+            raise Exception(f'Error: Invalid model path specified -> {request.path}')
+
         model_assignment = self.app.db.session.query(ModelAssignment).filter(ModelAssignment.service_name == self.app.config.SERVICE_NAME).one()
         model_assignment.model_path = request.path
         model_assignment.first_boot = False
         self.app.db.session.commit()
-        model_path = self.app.get_model_path()
 
         # :TODO: Use enum for SERVICE_INFRA
         if self.app.config.SERVICE_INFRA == "kubernetes":
             pass
         elif self.app.config.SERVICE_INFRA == "default":
-            self.app.load_model(model_path)
+            self.app.model_path = self.app.get_model_path()
+            self.app.load_model()
 
         return drucker_pb2.ModelResponse(status=1,
                                          message='Success: Switching model file.')
@@ -163,6 +176,8 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
         """
         first_req = next(request_iterator)
         save_path = first_req.data_path
+        if not self.is_valid_upload_filename(save_path):
+            raise Exception(f'Error: Invalid evaluation file path specified -> {save_path}')
 
         test_data = b''.join([first_req.data] + [r.data for r in request_iterator])
         result, details = self.app.evaluate(test_data)
