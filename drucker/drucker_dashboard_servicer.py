@@ -149,17 +149,20 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
                     ) -> drucker_pb2.ModelResponse:
         """ Switch your ML model to run.
         """
+        if not self.is_valid_upload_filename(request.path):
+            raise Exception(f'Error: Invalid model path specified -> {request.path}')
+
         model_assignment = self.app.db.session.query(ModelAssignment).filter(ModelAssignment.service_name == self.app.config.SERVICE_NAME).one()
         model_assignment.model_path = request.path
         model_assignment.first_boot = False
         self.app.db.session.commit()
-        model_path = self.app.get_model_path()
 
         # :TODO: Use enum for SERVICE_INFRA
         if self.app.config.SERVICE_INFRA == "kubernetes":
             pass
         elif self.app.config.SERVICE_INFRA == "default":
-            self.app.load_model(model_path)
+            self.app.model_path = self.app.get_model_path()
+            self.app.load_model()
 
         return drucker_pb2.ModelResponse(status=1,
                                          message='Success: Switching model file.')
@@ -174,7 +177,7 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
         first_req = next(request_iterator)
         save_path = first_req.data_path
         if not self.is_valid_upload_filename(save_path):
-            raise Exception(f'Error: Invalid evaluation file specified -> {save_path}')
+            raise Exception(f'Error: Invalid evaluation file path specified -> {save_path}')
 
         test_data = b''.join([first_req.data] + [r.data for r in request_iterator])
         result, details = self.app.evaluate(test_data)

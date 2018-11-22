@@ -15,7 +15,7 @@ class DruckerWorkerServicerTest(unittest.TestCase):
     def test_ServiceInfo(self):
         servicer = DruckerDashboardServicer(logger=system_logger, app=app)
         request = drucker_pb2.ServiceInfoRequest()
-        response = servicer.ServiceInfo(request=request, context=Mock())
+        response = servicer.ServiceInfo(request, Mock())
         self.assertEqual(response.application_name, 'test')
         self.assertEqual(response.service_name, 'test-001')
         self.assertEqual(response.service_level, 'development')
@@ -73,7 +73,22 @@ class DruckerWorkerServicerTest(unittest.TestCase):
         response = servicer.SwitchModel(request, Mock())
 
         self.assertEqual(response.status, 1)
-        mock_app.load_model.assert_called_once_with('test/my_path')
+        mock_app.load_model.assert_called_once_with()
+
+    @patch('drucker.test.DummyApp')
+    @patch('drucker.drucker_dashboard_servicer.Path')
+    def test_InvalidSwitchModel(self, mock_path_class, mock_app):
+        # mock setting
+        mock_path_class.return_value = Mock()
+        mock_path_class.return_value.name = 'my_path'
+        mock_app.get_model_path.return_value = 'test/my_path'
+        mock_app.config.SERVICE_INFRA = 'default'
+
+        servicer = DruckerDashboardServicer(logger=system_logger, app=mock_app)
+        request = drucker_pb2.SwitchModelRequest(path='../../my_path')
+        response = servicer.SwitchModel(request, Mock())
+
+        self.assertEqual(response.status, 0)
 
     @patch("builtins.open", new_callable=mock_open)
     @patch('drucker.drucker_dashboard_servicer.pickle')
