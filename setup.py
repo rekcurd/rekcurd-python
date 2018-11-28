@@ -14,7 +14,7 @@
 
 from setuptools import setup
 
-VERSION = "0.4.2a"
+VERSION = "0.4.3a"
 PACKAGE_NAME = "drucker"
 DEVELOPMENT_STATUS = "3 - Alpha"
 
