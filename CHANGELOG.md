@@ -1,5 +1,16 @@
 # Change Log
 
+## [v0.4.1](https://github.com/drucker/drucker/tree/v0.4.1) (2018-11-20)
+[Full Changelog](https://github.com/drucker/drucker/compare/v0.4.0...v0.4.1)
+
+**Merged pull requests:**
+
+- Release prepare/v0.4.1 [\#15](https://github.com/drucker/drucker/pull/15) ([keigohtr](https://github.com/keigohtr))
+- \[Hotfix\] Transform to string when `yaml.load` is boolean value [\#14](https://github.com/drucker/drucker/pull/14) ([keigohtr](https://github.com/keigohtr))
+- \[Hotfix\] boolean checker [\#12](https://github.com/drucker/drucker/pull/12) ([keigohtr](https://github.com/keigohtr))
+- evaluate model [\#11](https://github.com/drucker/drucker/pull/11) ([yuki-mt](https://github.com/yuki-mt))
+- \[Hotfix\] Fix invalid variable [\#10](https://github.com/drucker/drucker/pull/10) ([keigohtr](https://github.com/keigohtr))
+
 ## [v0.4.0](https://github.com/drucker/drucker/tree/v0.4.0) (2018-11-07)
 [Full Changelog](https://github.com/drucker/drucker/compare/v0.3.4...v0.4.0)
 
