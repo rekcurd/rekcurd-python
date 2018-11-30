@@ -79,6 +79,7 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
     """
 
     # postfix for evaluate result
+    EVALUATE_INPUT = '_eval_input.txt'
     EVALUATE_RESULT = '_eval_res.pkl'
     EVALUATE_DETAIL = '_eval_detail.pkl'
 
@@ -195,3 +196,24 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
             pickle.dump(details, f)
 
         return drucker_pb2.EvaluateModelResponse(metrics=metrics)
+
+    @error_handling(drucker_pb2.UploadEvaluationDataResponse(status=0, message='Error: Uploading evaluation data.'))
+    def UploadEvaluationData(self,
+                             request_iterator: Iterator[drucker_pb2.UploadEvaluationDataRequest],
+                             context: _Context
+                             ) -> drucker_pb2.UploadEvaluationDataResponse:
+        """ Save evaluation data
+        """
+        first_req = next(request_iterator)
+        save_path = first_req.data_path
+        if not self.is_valid_upload_filename(save_path):
+            raise Exception(f'Error: Invalid evaluation file path specified -> {save_path}')
+
+        test_data = b''.join([first_req.data] + [r.data for r in request_iterator])
+        eval_path = self.app.get_eval_path(save_path)
+        Path(eval_path).parent.mkdir(parents=True, exist_ok=True)
+        with open(eval_path + self.EVALUATE_INPUT, 'wb') as f:
+            f.write(test_data)
+
+        return drucker_pb2.UploadEvaluationDataResponse(status=1,
+                                                        message='Success: Uploading evaluation data.')
