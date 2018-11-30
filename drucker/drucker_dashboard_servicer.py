@@ -79,7 +79,6 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
     """
 
     # postfix for evaluate result
-    EVALUATE_INPUT = '_eval_input.txt'
     EVALUATE_RESULT = '_eval_res.pkl'
     EVALUATE_DETAIL = '_eval_detail.pkl'
 
@@ -176,23 +175,28 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
         """ Evaluate your ML model and save result.
         """
         first_req = next(request_iterator)
-        save_path = first_req.data_path
-        if not self.is_valid_upload_filename(save_path):
-            raise Exception(f'Error: Invalid evaluation file path specified -> {save_path}')
+        data_path = first_req.data_path
+        result_path = first_req.result_path
+        if not self.is_valid_upload_filename(data_path):
+            raise Exception(f'Error: Invalid evaluation file path specified -> {data_path}')
+        if not self.is_valid_upload_filename(result_path):
+            raise Exception(f'Error: Invalid evaluation file path specified -> {result_path}')
 
-        test_data = b''.join([first_req.data] + [r.data for r in request_iterator])
-        result, details = self.app.evaluate(test_data)
+        eval_data = self.app.parse_eval_data(self.app.get_eval_path(data_path))
+
+        result, details = self.app.evaluate(eval_data)
         metrics = drucker_pb2.EvaluationMetrics(num=result.num,
                                                 accuracy=result.accuracy,
                                                 precision=result.precision,
                                                 recall=result.recall,
                                                 fvalue=result.fvalue,
                                                 option=result.option)
-        eval_path = self.app.get_eval_path(save_path)
-        Path(eval_path).parent.mkdir(parents=True, exist_ok=True)
-        with open(eval_path + self.EVALUATE_RESULT, 'wb') as f:
+
+        eval_result_path = self.app.get_eval_path(result_path)
+        Path(eval_result_path).parent.mkdir(parents=True, exist_ok=True)
+        with open(eval_result_path + self.EVALUATE_RESULT, 'wb') as f:
             pickle.dump(result, f)
-        with open(eval_path + self.EVALUATE_DETAIL, 'wb') as f:
+        with open(eval_result_path + self.EVALUATE_DETAIL, 'wb') as f:
             pickle.dump(details, f)
 
         return drucker_pb2.EvaluateModelResponse(metrics=metrics)
@@ -209,11 +213,11 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
         if not self.is_valid_upload_filename(save_path):
             raise Exception(f'Error: Invalid evaluation file path specified -> {save_path}')
 
-        test_data = b''.join([first_req.data] + [r.data for r in request_iterator])
+        eval_data = b''.join([first_req.data] + [r.data for r in request_iterator])
         eval_path = self.app.get_eval_path(save_path)
         Path(eval_path).parent.mkdir(parents=True, exist_ok=True)
-        with open(eval_path + self.EVALUATE_INPUT, 'wb') as f:
-            f.write(test_data)
+        with open(eval_path, 'wb') as f:
+            f.write(eval_data)
 
         return drucker_pb2.UploadEvaluationDataResponse(status=1,
                                                         message='Success: Uploading evaluation data.')

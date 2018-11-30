@@ -89,7 +89,10 @@ class EvaluateResult:
 
 
 class EvaluateDetail(NamedTuple):
-    input: PredictInput
-    label: PredictLabel
     result: PredictResult
     is_correct: bool
+
+
+class EvaluateData(NamedTuple):
+    input: PredictInput
+    label: PredictLabel
