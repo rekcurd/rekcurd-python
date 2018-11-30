@@ -4,7 +4,7 @@ import grpc
 
 from drucker.protobuf import drucker_pb2
 from drucker.drucker_dashboard_servicer import DruckerDashboardServicer
-from drucker.utils import EvaluateResult, EvaluateDetail, PredictResult
+from drucker.utils import EvaluateResult, EvaluateDetail, PredictResult, EvaluateData
 from . import app, system_logger
 
 
@@ -90,16 +90,39 @@ class DruckerWorkerServicerTest(unittest.TestCase):
 
         self.assertEqual(response.status, 0)
 
+    def test_UploadEvaluationData(self):
+        # mock setting
+        mockio = mock_open()
+        mock_file = mockio()
+
+        servicer = DruckerDashboardServicer(logger=system_logger, app=app)
+        requests = iter(drucker_pb2.UploadEvaluationDataRequest(data_path='my_path', data=b'data_') for _ in range(1, 3))
+        with patch('drucker.drucker_dashboard_servicer.open', mockio):
+            response = servicer.UploadEvaluationData(requests, Mock())
+        self.assertEqual(response.status, 1)
+
+        mock_file.write.assert_called_once_with(b'data_data_')
+        mockio.assert_called_with("./eval/test/my_path", "wb")
+
+    def test_InvalidEvaluationData(self):
+        # mock setting
+        servicer = DruckerDashboardServicer(logger=system_logger, app=app)
+        requests = iter(drucker_pb2.UploadEvaluationDataRequest(data_path='../../my_path', data=b'data_') for _ in range(1, 3))
+        response = servicer.UploadEvaluationData(requests, Mock())
+        self.assertEqual(response.status, 0)
+
     @patch("builtins.open", new_callable=mock_open)
     @patch('drucker.drucker_dashboard_servicer.pickle')
     def test_EvalauteModel(self, mock_pickle, mock_file):
         # mock setting
         eval_result = EvaluateResult(1, 0.8, [0.7], [0.6], [0.5], {'dummy': 0.4})
-        details = [EvaluateDetail('test_input', 'test_label', PredictResult('pre_label', 0.9), False)]
+        details = [EvaluateDetail(PredictResult('pre_label', 0.9), False)]
+        eval_data = iter([EvaluateData('test_input', 'test_label')])
         app.evaluate = Mock(return_value=(eval_result, details))
+        app.parse_eval_data = Mock(return_value=eval_data)
 
         servicer = DruckerDashboardServicer(logger=system_logger, app=app)
-        requests = iter(drucker_pb2.EvaluateModelRequest(data_path='my_path', data=b'data_') for _ in range(1, 3))
+        requests = iter(drucker_pb2.EvaluateModelRequest(data_path='my_path', result_path='my_res_path') for _ in range(1, 3))
         response = servicer.EvaluateModel(requests, Mock())
 
         self.assertEqual(round(response.metrics.num, 3), eval_result.num)
@@ -109,28 +132,26 @@ class DruckerWorkerServicerTest(unittest.TestCase):
         self.assertEqual([round(f, 3) for f in response.metrics.fvalue], eval_result.fvalue)
         self.assertEqual(round(response.metrics.option['dummy'], 3), eval_result.option['dummy'])
 
-        app.evaluate.assert_called_once_with(b'data_data_')
+        app.parse_eval_data.assert_called_once_with('./eval/test/my_path')
+        app.evaluate.assert_called_once_with(eval_data)
 
         mock_file.assert_has_calls([
-            call("./eval/test/my_path_eval_res.pkl", "wb"),
-            call("./eval/test/my_path_eval_detail.pkl", "wb")
+            call("./eval/test/my_res_path_eval_res.pkl", "wb"),
+            call("./eval/test/my_res_path_eval_detail.pkl", "wb")
         ], any_order=True)
 
     @patch("builtins.open", new_callable=mock_open)
     @patch('drucker.drucker_dashboard_servicer.pickle')
     @patch('drucker.drucker_dashboard_servicer.Path')
     def test_InvalidEvalauteModel(self, mock_path_class, mock_pickle, mock_file):
-        # mock setting
-        mock_path_class.return_value = Mock()
-        mock_path_class.return_value.name = 'my_path'
-        eval_result = EvaluateResult(1, 0.8, [0.7], [0.6], [0.5], {'dummy': 0.4})
-        details = [EvaluateDetail('test_input', 'test_label', PredictResult('pre_label', 0.9), False)]
-        app.evaluate = Mock(return_value=(eval_result, details))
-
         servicer = DruckerDashboardServicer(logger=system_logger, app=app)
-        requests = iter(drucker_pb2.EvaluateModelRequest(data_path='../../my_path', data=b'data_') for _ in range(1, 3))
-        response = servicer.EvaluateModel(requests, Mock())
 
+        requests = iter(drucker_pb2.EvaluateModelRequest(data_path='../../my_path') for _ in range(1, 3))
+        response = servicer.EvaluateModel(requests, Mock())
+        self.assertEqual(response.metrics.num, 0)
+
+        requests = iter(drucker_pb2.EvaluateModelRequest(result_path='../../my_path') for _ in range(1, 3))
+        response = servicer.EvaluateModel(requests, Mock())
         self.assertEqual(response.metrics.num, 0)
 
     def test_error_handling(self):
