@@ -10,10 +10,11 @@ import uuid
 import pickle
 from pathlib import Path
 
-from grpc._server import _Context
+from grpc import ServicerContext
 from typing import Iterator
 
 from .logger import SystemLoggerInterface
+from .utils import getForwardHeaders
 from .drucker_worker import Drucker, db, ModelAssignment
 from .protobuf import drucker_pb2, drucker_pb2_grpc
 
@@ -106,10 +107,11 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
 
     def ServiceInfo(self,
                     request: drucker_pb2.ServiceInfoRequest,
-                    context: _Context
+                    context: ServicerContext
                     ) -> drucker_pb2.ServiceInfoResponse:
         """ Get service info.
         """
+        context.set_trailing_metadata(getForwardHeaders(context.invocation_metadata()))
         return drucker_pb2.ServiceInfoResponse(
             application_name=self.app.config.APPLICATION_NAME,
             service_name=self.app.config.SERVICE_NAME,
@@ -118,10 +120,11 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
     @error_handling(drucker_pb2.ModelResponse(status=0, message='Error: Uploading model file.'))
     def UploadModel(self,
                     request_iterator: Iterator[drucker_pb2.UploadModelRequest],
-                    context: _Context
+                    context: ServicerContext
                     ) -> drucker_pb2.ModelResponse:
         """ Upload your latest ML model.
         """
+        context.set_trailing_metadata(getForwardHeaders(context.invocation_metadata()))
         first_req = next(request_iterator)
         save_path = first_req.path
         if not self.is_valid_upload_filename(save_path):
@@ -145,10 +148,11 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
     @error_handling(drucker_pb2.ModelResponse(status=0, message='Error: Switching model file.'))
     def SwitchModel(self,
                     request: drucker_pb2.SwitchModelRequest,
-                    context: _Context
+                    context: ServicerContext
                     ) -> drucker_pb2.ModelResponse:
         """ Switch your ML model to run.
         """
+        context.set_trailing_metadata(getForwardHeaders(context.invocation_metadata()))
         if not self.is_valid_upload_filename(request.path):
             raise Exception(f'Error: Invalid model path specified -> {request.path}')
 
@@ -170,10 +174,11 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
     @error_handling(drucker_pb2.EvaluateModelResponse(metrics=drucker_pb2.EvaluationMetrics()))
     def EvaluateModel(self,
                       request_iterator: Iterator[drucker_pb2.EvaluateModelRequest],
-                      context: _Context
+                      context: ServicerContext
                       ) -> drucker_pb2.EvaluateModelResponse:
         """ Evaluate your ML model and save result.
         """
+        context.set_trailing_metadata(getForwardHeaders(context.invocation_metadata()))
         first_req = next(request_iterator)
         save_path = first_req.data_path
         if not self.is_valid_upload_filename(save_path):

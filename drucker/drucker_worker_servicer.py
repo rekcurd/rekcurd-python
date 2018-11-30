@@ -5,10 +5,11 @@
 import json
 
 from enum import Enum
-from grpc._server import _Context
+from grpc import ServicerContext
 from typing import Iterator, Union
 
 from .logger import ServiceLoggerInterface
+from .utils import getForwardHeaders
 from .drucker_worker import PredictResult, Drucker
 from .protobuf import drucker_pb2, drucker_pb2_grpc
 
@@ -35,9 +36,11 @@ class DruckerWorkerServicer(drucker_pb2_grpc.DruckerWorkerServicer):
 
     def Process(self,
                 request: DruckerInput,
+                context: ServicerContext,
                 response: DruckerOutput
                 ) -> DruckerOutput:
 
+        context.set_trailing_metadata(getForwardHeaders(context.invocation_metadata()))
         input = request.input
         try:
             ioption = json.loads(request.option.val)
@@ -78,205 +81,205 @@ class DruckerWorkerServicer(drucker_pb2_grpc.DruckerWorkerServicer):
 
     def Predict_String_String(self,
                               request: drucker_pb2.StringInput,
-                              context: _Context
+                              context: ServicerContext
                               ) -> drucker_pb2.StringOutput:
         response = drucker_pb2.StringOutput()
         self.app.set_type(self.Type.STRING, self.Type.STRING)
-        return self.Process(request, response)
+        return self.Process(request, context, response)
 
     def Predict_String_Bytes(self,
                              request: drucker_pb2.StringInput,
-                             context: _Context
+                             context: ServicerContext
                              ) -> drucker_pb2.BytesOutput:
         response = drucker_pb2.BytesOutput()
         self.app.set_type(self.Type.STRING, self.Type.BYTES)
-        yield self.Process(request, response)
+        yield self.Process(request, context, response)
 
     def Predict_String_ArrInt(self,
                               request: drucker_pb2.StringInput,
-                              context: _Context
+                              context: ServicerContext
                               ) -> drucker_pb2.ArrIntOutput:
         response = drucker_pb2.ArrIntOutput()
         self.app.set_type(self.Type.STRING, self.Type.ARRAY_INT)
-        return self.Process(request, response)
+        return self.Process(request, context, response)
 
     def Predict_String_ArrFloat(self,
                                 request: drucker_pb2.StringInput,
-                                context: _Context
+                                context: ServicerContext
                                 ) -> drucker_pb2.ArrFloatOutput:
         response = drucker_pb2.ArrFloatOutput()
         self.app.set_type(self.Type.STRING, self.Type.ARRAY_FLOAT)
-        return self.Process(request, response)
+        return self.Process(request, context, response)
 
     def Predict_String_ArrString(self,
                                  request: drucker_pb2.StringInput,
-                                 context: _Context
+                                 context: ServicerContext
                                  ) -> drucker_pb2.ArrStringOutput:
         response = drucker_pb2.ArrStringOutput()
         self.app.set_type(self.Type.STRING, self.Type.ARRAY_STRING)
-        return self.Process(request, response)
+        return self.Process(request, context, response)
 
     def Predict_Bytes_String(self,
                              request_iterator: Iterator[drucker_pb2.BytesInput],
-                             context: _Context
+                             context: ServicerContext
                              ) -> drucker_pb2.StringOutput:
         for request in request_iterator:
             response = drucker_pb2.StringOutput()
             self.app.set_type(self.Type.BYTES, self.Type.STRING)
-            return self.Process(request, response)
+            return self.Process(request, context, response)
 
     def Predict_Bytes_Bytes(self,
                             request_iterator: Iterator[drucker_pb2.BytesInput],
-                            context: _Context
+                            context: ServicerContext
                             ) -> drucker_pb2.BytesOutput:
         for request in request_iterator:
             response = drucker_pb2.BytesOutput()
             self.app.set_type(self.Type.BYTES, self.Type.BYTES)
-            yield self.Process(request, response)
+            yield self.Process(request, context, response)
 
     def Predict_Bytes_ArrInt(self,
                              request_iterator: Iterator[drucker_pb2.BytesInput],
-                             context: _Context
+                             context: ServicerContext
                              ) -> drucker_pb2.ArrIntOutput:
         for request in request_iterator:
             response = drucker_pb2.ArrIntOutput()
             self.app.set_type(self.Type.BYTES, self.Type.ARRAY_INT)
-            return self.Process(request, response)
+            return self.Process(request, context, response)
 
     def Predict_Bytes_ArrFloat(self,
                                request_iterator: Iterator[drucker_pb2.BytesInput],
-                               context: _Context
+                               context: ServicerContext
                                ) -> drucker_pb2.ArrFloatOutput:
         for request in request_iterator:
             response = drucker_pb2.ArrFloatOutput()
             self.app.set_type(self.Type.BYTES, self.Type.ARRAY_FLOAT)
-            return self.Process(request, response)
+            return self.Process(request, context, response)
 
     def Predict_Bytes_ArrString(self,
                                 request_iterator: Iterator[drucker_pb2.BytesInput],
-                                context: _Context
+                                context: ServicerContext
                                 ) -> drucker_pb2.ArrStringOutput:
         for request in request_iterator:
             response = drucker_pb2.ArrStringOutput()
             self.app.set_type(self.Type.BYTES, self.Type.ARRAY_STRING)
-            return self.Process(request, response)
+            return self.Process(request, context, response)
 
     def Predict_ArrInt_String(self,
                               request: drucker_pb2.ArrIntInput,
-                              context: _Context
+                              context: ServicerContext
                               ) -> drucker_pb2.StringOutput:
         response = drucker_pb2.StringOutput()
         self.app.set_type(self.Type.ARRAY_INT, self.Type.STRING)
-        return self.Process(request, response)
+        return self.Process(request, context, response)
 
     def Predict_ArrInt_Bytes(self,
                              request: drucker_pb2.ArrIntInput,
-                             context: _Context
+                             context: ServicerContext
                              ) -> drucker_pb2.BytesOutput:
         response = drucker_pb2.BytesOutput()
         self.app.set_type(self.Type.ARRAY_INT, self.Type.BYTES)
-        yield self.Process(request, response)
+        yield self.Process(request, context, response)
 
     def Predict_ArrInt_ArrInt(self,
                               request: drucker_pb2.ArrIntInput,
-                              context: _Context
+                              context: ServicerContext
                               ) -> drucker_pb2.ArrIntOutput:
         response = drucker_pb2.ArrIntOutput()
         self.app.set_type(self.Type.ARRAY_INT, self.Type.ARRAY_INT)
-        return self.Process(request, response)
+        return self.Process(request, context, response)
 
     def Predict_ArrInt_ArrFloat(self,
                                 request: drucker_pb2.ArrIntInput,
-                                context: _Context
+                                context: ServicerContext
                                 ) -> drucker_pb2.ArrFloatOutput:
         response = drucker_pb2.ArrFloatOutput()
         self.app.set_type(self.Type.ARRAY_INT, self.Type.ARRAY_FLOAT)
-        return self.Process(request, response)
+        return self.Process(request, context, response)
 
     def Predict_ArrInt_ArrString(self,
                                  request: drucker_pb2.ArrIntInput,
-                                 context: _Context
+                                 context: ServicerContext
                                  ) -> drucker_pb2.ArrStringOutput:
         response = drucker_pb2.ArrStringOutput()
         self.app.set_type(self.Type.ARRAY_INT, self.Type.ARRAY_STRING)
-        return self.Process(request, response)
+        return self.Process(request, context, response)
 
     def Predict_ArrFloat_String(self,
                                 request: drucker_pb2.ArrFloatInput,
-                                context: _Context
+                                context: ServicerContext
                                 ) -> drucker_pb2.StringOutput:
         response = drucker_pb2.StringOutput()
         self.app.set_type(self.Type.ARRAY_FLOAT, self.Type.STRING)
-        return self.Process(request, response)
+        return self.Process(request, context, response)
 
     def Predict_ArrFloat_Bytes(self,
                                request: drucker_pb2.ArrFloatInput,
-                               context: _Context
+                               context: ServicerContext
                                ) -> drucker_pb2.BytesOutput:
         response = drucker_pb2.BytesOutput()
         self.app.set_type(self.Type.ARRAY_FLOAT, self.Type.BYTES)
-        yield self.Process(request, response)
+        yield self.Process(request, context, response)
 
     def Predict_ArrFloat_ArrInt(self,
                                 request: drucker_pb2.ArrFloatInput,
-                                context: _Context
+                                context: ServicerContext
                                 ) -> drucker_pb2.ArrIntOutput:
         response = drucker_pb2.ArrIntOutput()
         self.app.set_type(self.Type.ARRAY_FLOAT, self.Type.ARRAY_INT)
-        return self.Process(request, response)
+        return self.Process(request, context, response)
 
     def Predict_ArrFloat_ArrFloat(self,
                                   request: drucker_pb2.ArrFloatInput,
-                                  context: _Context
+                                  context: ServicerContext
                                   ) -> drucker_pb2.ArrFloatOutput:
         response = drucker_pb2.ArrFloatOutput()
         self.app.set_type(self.Type.ARRAY_FLOAT, self.Type.ARRAY_FLOAT)
-        return self.Process(request, response)
+        return self.Process(request, context, response)
 
     def Predict_ArrFloat_ArrString(self,
                                    request: drucker_pb2.ArrFloatInput,
-                                   context: _Context
+                                   context: ServicerContext
                                    ) -> drucker_pb2.ArrStringOutput:
         response = drucker_pb2.ArrStringOutput()
         self.app.set_type(self.Type.ARRAY_FLOAT, self.Type.ARRAY_STRING)
-        return self.Process(request, response)
+        return self.Process(request, context, response)
 
     def Predict_ArrString_String(self,
                                  request: drucker_pb2.ArrStringInput,
-                                 context: _Context
+                                 context: ServicerContext
                                  ) -> drucker_pb2.StringOutput:
         response = drucker_pb2.StringOutput()
         self.app.set_type(self.Type.ARRAY_STRING, self.Type.STRING)
-        return self.Process(request, response)
+        return self.Process(request, context, response)
 
     def Predict_ArrString_Bytes(self,
                                 request: drucker_pb2.ArrStringInput,
-                                context: _Context
+                                context: ServicerContext
                                 ) -> drucker_pb2.BytesOutput:
         response = drucker_pb2.BytesOutput()
         self.app.set_type(self.Type.ARRAY_STRING, self.Type.BYTES)
-        yield self.Process(request, response)
+        yield self.Process(request, context, response)
 
     def Predict_ArrString_ArrInt(self,
                                  request: drucker_pb2.ArrStringInput,
-                                 context: _Context
+                                 context: ServicerContext
                                  ) -> drucker_pb2.ArrIntOutput:
         response = drucker_pb2.ArrIntOutput()
         self.app.set_type(self.Type.ARRAY_STRING, self.Type.ARRAY_INT)
-        return self.Process(request, response)
+        return self.Process(request, context, response)
 
     def Predict_ArrString_ArrFloat(self,
                                    request: drucker_pb2.ArrStringInput,
-                                   context: _Context
+                                   context: ServicerContext
                                    ) -> drucker_pb2.ArrFloatOutput:
         response = drucker_pb2.ArrFloatOutput()
         self.app.set_type(self.Type.ARRAY_STRING, self.Type.ARRAY_FLOAT)
-        return self.Process(request, response)
+        return self.Process(request, context, response)
 
     def Predict_ArrString_ArrString(self,
                                     request: drucker_pb2.ArrStringInput,
-                                    context: _Context
+                                    context: ServicerContext
                                     ) -> drucker_pb2.ArrStringOutput:
         response = drucker_pb2.ArrStringOutput()
         self.app.set_type(self.Type.ARRAY_STRING, self.Type.ARRAY_STRING)
-        return self.Process(request, response)
+        return self.Process(request, context, response)
