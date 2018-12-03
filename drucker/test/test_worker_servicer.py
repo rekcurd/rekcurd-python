@@ -112,6 +112,19 @@ class DruckerWorkerServicerTest(unittest.TestCase):
         self.assertIs(code, StatusCode.OK)
         self.assertStringResponse(response)
 
+    @patch_predictor(Type.STRING, Type.STRING)
+    def test_metadata(self):
+        metadata = [('x-request-id', 'test'), ('dummy', 'dummy')]
+        rpc = self._real_time_server.invoke_unary_unary(
+            target_service.methods_by_name['Predict_String_String'], metadata,
+            self.fake_string_request(), None)
+        initial_metadata = rpc.initial_metadata()
+        response, trailing_metadata, code, details = rpc.termination()
+        self.assertIs(code, StatusCode.OK)
+        self.assertStringResponse(response)
+        self.assertIs(trailing_metadata[0][0], metadata[0][0])
+        self.assertIs(trailing_metadata[0][1], metadata[0][1])
+
     @patch_predictor(Type.STRING, Type.BYTES)
     def test_String_Bytes(self):
         rpc = self._real_time_server.invoke_unary_stream(
