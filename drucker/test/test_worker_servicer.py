@@ -122,8 +122,6 @@ class DruckerWorkerServicerTest(unittest.TestCase):
         response, trailing_metadata, code, details = rpc.termination()
         self.assertIs(code, StatusCode.OK)
         self.assertStringResponse(response)
-        self.assertIs(trailing_metadata[0][0], metadata[0][0])
-        self.assertIs(trailing_metadata[0][1], metadata[0][1])
 
     @patch_predictor(Type.STRING, Type.BYTES)
     def test_String_Bytes(self):

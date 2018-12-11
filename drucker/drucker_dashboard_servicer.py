@@ -14,7 +14,6 @@ from grpc import ServicerContext
 from typing import Iterator
 
 from .logger import SystemLoggerInterface
-from .utils import getForwardHeaders
 from .drucker_worker import Drucker, db, ModelAssignment
 from .protobuf import drucker_pb2, drucker_pb2_grpc
 
@@ -111,7 +110,6 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
                     ) -> drucker_pb2.ServiceInfoResponse:
         """ Get service info.
         """
-        context.set_trailing_metadata(getForwardHeaders(context.invocation_metadata()))
         return drucker_pb2.ServiceInfoResponse(
             application_name=self.app.config.APPLICATION_NAME,
             service_name=self.app.config.SERVICE_NAME,
@@ -124,7 +122,6 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
                     ) -> drucker_pb2.ModelResponse:
         """ Upload your latest ML model.
         """
-        context.set_trailing_metadata(getForwardHeaders(context.invocation_metadata()))
         first_req = next(request_iterator)
         save_path = first_req.path
         if not self.is_valid_upload_filename(save_path):
@@ -152,7 +149,6 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
                     ) -> drucker_pb2.ModelResponse:
         """ Switch your ML model to run.
         """
-        context.set_trailing_metadata(getForwardHeaders(context.invocation_metadata()))
         if not self.is_valid_upload_filename(request.path):
             raise Exception(f'Error: Invalid model path specified -> {request.path}')
 
@@ -178,7 +174,6 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
                       ) -> drucker_pb2.EvaluateModelResponse:
         """ Evaluate your ML model and save result.
         """
-        context.set_trailing_metadata(getForwardHeaders(context.invocation_metadata()))
         first_req = next(request_iterator)
         save_path = first_req.data_path
         if not self.is_valid_upload_filename(save_path):

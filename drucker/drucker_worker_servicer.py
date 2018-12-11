@@ -9,7 +9,6 @@ from grpc import ServicerContext
 from typing import Iterator, Union
 
 from .logger import ServiceLoggerInterface
-from .utils import getForwardHeaders
 from .drucker_worker import PredictResult, Drucker
 from .protobuf import drucker_pb2, drucker_pb2_grpc
 
@@ -40,7 +39,6 @@ class DruckerWorkerServicer(drucker_pb2_grpc.DruckerWorkerServicer):
                 response: DruckerOutput
                 ) -> DruckerOutput:
 
-        context.set_trailing_metadata(getForwardHeaders(context.invocation_metadata()))
         input = request.input
         try:
             ioption = json.loads(request.option.val)
