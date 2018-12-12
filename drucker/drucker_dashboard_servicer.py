@@ -10,7 +10,7 @@ import uuid
 import pickle
 from pathlib import Path
 
-from grpc._server import _Context
+from grpc import ServicerContext
 from typing import Iterator
 
 from .logger import SystemLoggerInterface
@@ -106,7 +106,7 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
 
     def ServiceInfo(self,
                     request: drucker_pb2.ServiceInfoRequest,
-                    context: _Context
+                    context: ServicerContext
                     ) -> drucker_pb2.ServiceInfoResponse:
         """ Get service info.
         """
@@ -118,7 +118,7 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
     @error_handling(drucker_pb2.ModelResponse(status=0, message='Error: Uploading model file.'))
     def UploadModel(self,
                     request_iterator: Iterator[drucker_pb2.UploadModelRequest],
-                    context: _Context
+                    context: ServicerContext
                     ) -> drucker_pb2.ModelResponse:
         """ Upload your latest ML model.
         """
@@ -145,7 +145,7 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
     @error_handling(drucker_pb2.ModelResponse(status=0, message='Error: Switching model file.'))
     def SwitchModel(self,
                     request: drucker_pb2.SwitchModelRequest,
-                    context: _Context
+                    context: ServicerContext
                     ) -> drucker_pb2.ModelResponse:
         """ Switch your ML model to run.
         """
@@ -170,7 +170,7 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
     @error_handling(drucker_pb2.EvaluateModelResponse(metrics=drucker_pb2.EvaluationMetrics()))
     def EvaluateModel(self,
                       request_iterator: Iterator[drucker_pb2.EvaluateModelRequest],
-                      context: _Context
+                      context: ServicerContext
                       ) -> drucker_pb2.EvaluateModelResponse:
         """ Evaluate your ML model and save result.
         """
@@ -180,7 +180,7 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
         if not self.is_valid_upload_filename(data_path):
             raise Exception(f'Error: Invalid evaluation file path specified -> {data_path}')
         if not self.is_valid_upload_filename(result_path):
-            raise Exception(f'Error: Invalid evaluation file path specified -> {result_path}')
+            raise Exception(f'Error: Invalid evaluation result file path specified -> {result_path}')
 
         eval_data = self.app.parse_eval_data(self.app.get_eval_path(data_path))
 
@@ -204,7 +204,7 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
     @error_handling(drucker_pb2.UploadEvaluationDataResponse(status=0, message='Error: Uploading evaluation data.'))
     def UploadEvaluationData(self,
                              request_iterator: Iterator[drucker_pb2.UploadEvaluationDataRequest],
-                             context: _Context
+                             context: ServicerContext
                              ) -> drucker_pb2.UploadEvaluationDataResponse:
         """ Save evaluation data
         """

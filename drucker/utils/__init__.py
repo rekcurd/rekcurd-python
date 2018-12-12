@@ -96,3 +96,15 @@ class EvaluateDetail(NamedTuple):
 class EvaluateData(NamedTuple):
     input: PredictInput
     label: PredictLabel
+
+
+incoming_headers = [
+    'x-request-id', 'x-b3-traceid', 'x-b3-spanid', 'x-b3-parentspanid',
+    'x-b3-sampled', 'x-b3-flags', 'x-ot-span-context']
+
+def getForwardHeaders(incoming: list) -> list:
+    headers = list()
+    for k,v in incoming:
+        if k in incoming_headers:
+            headers.append((k, v))
+    return headers
