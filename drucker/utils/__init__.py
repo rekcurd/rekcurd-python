@@ -55,10 +55,10 @@ class ServiceEnvType(Enum):
             return cls.STAGING
         elif cls.SANDBOX.value == istr:
             return cls.SANDBOX
-        elif cls.PRODUCTION == istr:
+        elif cls.PRODUCTION.value == istr:
             return cls.PRODUCTION
         else:
-            return None
+            raise ValueError("'{}' is not supported as ServiceEnvType".format(istr))
 
 
 class PredictResult:
