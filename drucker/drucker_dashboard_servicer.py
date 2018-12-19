@@ -182,9 +182,7 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
         if not self.is_valid_upload_filename(result_path):
             raise Exception(f'Error: Invalid evaluation result file path specified -> {result_path}')
 
-        eval_data = self.app.parse_eval_data(self.app.get_eval_path(data_path))
-
-        result, details = self.app.evaluate(eval_data)
+        result, details = self.app.evaluate(self.app.get_eval_path(data_path))
         metrics = drucker_pb2.EvaluationMetrics(num=result.num,
                                                 accuracy=result.accuracy,
                                                 precision=result.precision,

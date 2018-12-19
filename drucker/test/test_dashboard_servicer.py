@@ -1,13 +1,13 @@
 import unittest
 import time
 from functools import wraps
-from unittest.mock import patch, Mock, mock_open, call
+from unittest.mock import patch, Mock, mock_open
 import grpc_testing
 from grpc import StatusCode
 
 from drucker.protobuf import drucker_pb2
 from drucker.drucker_dashboard_servicer import DruckerDashboardServicer
-from drucker.utils import EvaluateResult, EvaluateDetail, PredictResult, EvaluateData
+from drucker.utils import EvaluateResult, EvaluateDetail, PredictResult
 from . import app, system_logger
 
 
@@ -47,7 +47,6 @@ class DruckerWorkerServicerTest(unittest.TestCase):
         app.get_eval_path = Mock(return_value='test/my_eval_path')
         app.config.SERVICE_INFRA = 'default'
         app.evaluate = Mock(return_value=(eval_result, details))
-        app.parse_eval_data = Mock(return_value=[EvaluateData('my_input', 'my_label')])
         self._real_time = grpc_testing.strict_real_time()
         self._fake_time = grpc_testing.strict_fake_time(time.time())
         servicer = DruckerDashboardServicer(logger=system_logger, app=app)

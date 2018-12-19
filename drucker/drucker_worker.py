@@ -4,12 +4,10 @@
 
 from abc import ABCMeta, abstractmethod
 from enum import Enum
-from typing import List, Tuple, Generator, Iterator
+from typing import List, Tuple
 from sqlalchemy.sql import exists
-import io
-import csv
 
-from .utils import DruckerConfig, PredictLabel, PredictResult, EvaluateResult, EvaluateDetail, EvaluateData
+from .utils import DruckerConfig, PredictLabel, PredictResult, EvaluateResult, EvaluateDetail
 from .logger import logger
 from .models import db, ModelAssignment
 
@@ -75,12 +73,6 @@ class Drucker(metaclass=ABCMeta):
         return self.__type_output
 
     @abstractmethod
-    def parse_eval_data(self, file_path: str) -> Generator[EvaluateData, None, None]:
-        """parse file uploaded from dashboard
-        """
-        raise NotImplemented()
-
-    @abstractmethod
     def load_model(self) -> None:
         raise NotImplemented()
 
@@ -89,5 +81,5 @@ class Drucker(metaclass=ABCMeta):
         raise NotImplemented()
 
     @abstractmethod
-    def evaluate(self, eval_data: Iterator[EvaluateData]) -> Tuple[EvaluateResult, List[EvaluateDetail]]:
+    def evaluate(self, file_path: str) -> Tuple[EvaluateResult, List[EvaluateDetail]]:
         raise NotImplemented()

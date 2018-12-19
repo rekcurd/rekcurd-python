@@ -9,7 +9,6 @@ from enum import Enum
 from typing import Union, List, Dict, NamedTuple
 
 
-PredictInput = Union[str, bytes, List[str], List[int], List[float]]
 PredictLabel = Union[str, bytes, List[str], List[int], List[float]]
 PredictScore = Union[float, List[float]]
 
@@ -91,11 +90,6 @@ class EvaluateResult:
 class EvaluateDetail(NamedTuple):
     result: PredictResult
     is_correct: bool
-
-
-class EvaluateData(NamedTuple):
-    input: PredictInput
-    label: PredictLabel
 
 
 incoming_headers = [
