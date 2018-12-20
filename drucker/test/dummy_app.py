@@ -17,5 +17,5 @@ class DummyApp(Drucker):
     def predict(self, input: PredictLabel, option: dict = None) -> PredictResult:
         pass
 
-    def evaluate(self, file: bytes) -> Tuple[EvaluateResult, List[EvaluateDetail]]:
+    def evaluate(self, file_path: str) -> Tuple[EvaluateResult, List[EvaluateDetail]]:
         pass

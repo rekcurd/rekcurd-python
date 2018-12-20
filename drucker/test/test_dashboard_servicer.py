@@ -1,7 +1,7 @@
 import unittest
 import time
 from functools import wraps
-from unittest.mock import patch, Mock, mock_open, call
+from unittest.mock import patch, Mock, mock_open
 import grpc_testing
 from grpc import StatusCode
 
@@ -13,7 +13,7 @@ from . import app, system_logger
 
 target_service = drucker_pb2.DESCRIPTOR.services_by_name['DruckerDashboard']
 eval_result = EvaluateResult(1, 0.8, [0.7], [0.6], [0.5], {'dummy': 0.4})
-details = [EvaluateDetail('test_input', 'test_label', PredictResult('pre_label', 0.9), False)]
+details = [EvaluateDetail(PredictResult('pre_label', 0.9), False)]
 
 
 def patch_predictor():
@@ -44,6 +44,7 @@ class DruckerWorkerServicerTest(unittest.TestCase):
 
     def setUp(self):
         app.get_model_path = Mock(return_value='test/my_path')
+        app.get_eval_path = Mock(return_value='test/my_eval_path')
         app.config.SERVICE_INFRA = 'default'
         app.evaluate = Mock(return_value=(eval_result, details))
         self._real_time = grpc_testing.strict_real_time()
@@ -82,7 +83,6 @@ class DruckerWorkerServicerTest(unittest.TestCase):
         self.assertIs(code, StatusCode.OK)
         self.assertEqual(response.status, 1)
 
-
     @patch_predictor()
     def test_InvalidUploadModel(self):
         request = drucker_pb2.UploadModelRequest(path='../../../my_path', data=b'data')
@@ -118,8 +118,32 @@ class DruckerWorkerServicerTest(unittest.TestCase):
         self.assertEqual(response.status, 0)
 
     @patch_predictor()
+    def test_UploadEvaluationData(self):
+        request = drucker_pb2.UploadEvaluationDataRequest(data_path='my_path', data=b'data_')
+        rpc = self._real_time_server.invoke_stream_unary(
+            target_service.methods_by_name['UploadEvaluationData'], (), None)
+        rpc.send_request(request)
+        rpc.send_request(request)
+        rpc.send_request(request)
+        rpc.requests_closed()
+        response, trailing_metadata, code, details = rpc.termination()
+        self.assertEqual(response.status, 1)
+
+    @patch_predictor()
+    def test_InvalidEvaluationData(self):
+        request = drucker_pb2.UploadEvaluationDataRequest(data_path='../../my_path', data=b'data_')
+        rpc = self._real_time_server.invoke_stream_unary(
+            target_service.methods_by_name['UploadEvaluationData'], (), None)
+        rpc.send_request(request)
+        rpc.send_request(request)
+        rpc.send_request(request)
+        rpc.requests_closed()
+        response, trailing_metadata, code, details = rpc.termination()
+        self.assertEqual(response.status, 0)
+
+    @patch_predictor()
     def test_EvalauteModel(self):
-        request = drucker_pb2.EvaluateModelRequest(data_path='my_path', data=b'data')
+        request = drucker_pb2.EvaluateModelRequest(data_path='my_path', result_path='my_path')
         rpc = self._real_time_server.invoke_stream_unary(
             target_service.methods_by_name['EvaluateModel'], (), None)
         rpc.send_request(request)
@@ -138,11 +162,19 @@ class DruckerWorkerServicerTest(unittest.TestCase):
 
     @patch_predictor()
     def test_InvalidEvalauteModel(self):
-        request = drucker_pb2.EvaluateModelRequest(data_path='../../my_path', data=b'data')
+        request = drucker_pb2.EvaluateModelRequest(data_path='../../my_path', result_path='my_res_path')
         rpc = self._real_time_server.invoke_stream_unary(
             target_service.methods_by_name['EvaluateModel'], (), None)
         rpc.send_request(request)
-        rpc.send_request(request)
+        rpc.requests_closed()
+        initial_metadata = rpc.initial_metadata()
+        response, trailing_metadata, code, details = rpc.termination()
+        self.assertIs(code, StatusCode.UNKNOWN)
+        self.assertEqual(response.metrics.num, 0)
+
+        request = drucker_pb2.EvaluateModelRequest(data_path='my_path', result_path='../my_res_path')
+        rpc = self._real_time_server.invoke_stream_unary(
+            target_service.methods_by_name['EvaluateModel'], (), None)
         rpc.send_request(request)
         rpc.requests_closed()
         initial_metadata = rpc.initial_metadata()
