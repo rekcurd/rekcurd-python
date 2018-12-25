@@ -4,10 +4,10 @@
 
 from abc import ABCMeta, abstractmethod
 from enum import Enum
-from typing import List, Tuple
+from typing import List, Tuple, Generator
 from sqlalchemy.sql import exists
 
-from .utils import DruckerConfig, PredictLabel, PredictResult, EvaluateResult, EvaluateDetail
+from .utils import DruckerConfig, PredictLabel, PredictResult, EvaluateResult, EvaluateDetail, EvaluateResultDetail
 from .logger import logger
 from .models import db, ModelAssignment
 
@@ -81,5 +81,9 @@ class Drucker(metaclass=ABCMeta):
         raise NotImplemented()
 
     @abstractmethod
-    def evaluate(self, file_path: str) -> Tuple[EvaluateResult, List[EvaluateDetail]]:
+    def evaluate(self, file_path: str) -> Tuple[EvaluateResult, List[EvaluateResultDetail]]:
+        raise NotImplemented()
+
+    @abstractmethod
+    def get_evaluate_data(self, file_path: str, results: List[EvaluateResultDetail]) -> Generator[EvaluateDetail, None, None]:
         raise NotImplemented()
