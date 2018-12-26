@@ -9,7 +9,6 @@ from enum import Enum
 from typing import Union, List, Dict, NamedTuple
 
 
-PredictInput = Union[str, bytes, List[str], List[int], List[float]]
 PredictLabel = Union[str, bytes, List[str], List[int], List[float]]
 PredictScore = Union[float, List[float]]
 
@@ -55,10 +54,10 @@ class ServiceEnvType(Enum):
             return cls.STAGING
         elif cls.SANDBOX.value == istr:
             return cls.SANDBOX
-        elif cls.PRODUCTION == istr:
+        elif cls.PRODUCTION.value == istr:
             return cls.PRODUCTION
         else:
-            return None
+            raise ValueError("'{}' is not supported as ServiceEnvType".format(istr))
 
 
 class PredictResult:
@@ -89,7 +88,17 @@ class EvaluateResult:
 
 
 class EvaluateDetail(NamedTuple):
-    input: PredictInput
-    label: PredictLabel
     result: PredictResult
     is_correct: bool
+
+
+incoming_headers = [
+    'x-request-id', 'x-b3-traceid', 'x-b3-spanid', 'x-b3-parentspanid',
+    'x-b3-sampled', 'x-b3-flags', 'x-ot-span-context']
+
+def getForwardHeaders(incoming: list) -> list:
+    headers = list()
+    for k,v in incoming:
+        if k in incoming_headers:
+            headers.append((k, v))
+    return headers

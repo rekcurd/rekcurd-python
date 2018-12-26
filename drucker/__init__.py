@@ -13,7 +13,7 @@
 # limitations under the License.
 
 __project__ = 'drucker'
-__version__ = "0.4.2"
+__version__ = "0.4.3"
 
 from .drucker_worker import Drucker
 from .drucker_worker_servicer import DruckerInput, DruckerOutput, DruckerWorkerServicer

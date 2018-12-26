@@ -1,6 +1,9 @@
 import unittest
-from unittest.mock import patch, Mock, mock_open, call
-import grpc
+import time
+from functools import wraps
+from unittest.mock import patch, Mock, mock_open
+import grpc_testing
+from grpc import StatusCode
 
 from drucker.protobuf import drucker_pb2
 from drucker.drucker_dashboard_servicer import DruckerDashboardServicer
@@ -8,100 +11,148 @@ from drucker.utils import EvaluateResult, EvaluateDetail, PredictResult
 from . import app, system_logger
 
 
+target_service = drucker_pb2.DESCRIPTOR.services_by_name['DruckerDashboard']
+eval_result = EvaluateResult(1, 0.8, [0.7], [0.6], [0.5], {'dummy': 0.4})
+details = [EvaluateDetail(PredictResult('pre_label', 0.9), False)]
+
+
+def patch_predictor():
+    """Decorator to mock for dashboard.
+    """
+
+    def test_method(func):
+        @wraps(func)
+        def inner_method(*args, **kwargs):
+            with patch('drucker.drucker_dashboard_servicer.uuid.uuid4',
+                new=Mock(return_value=Mock(hex='my_uuid'))) as _, \
+                    patch('drucker.drucker_dashboard_servicer.shutil.move',
+                        new=Mock(return_value=True)) as _, \
+                    patch('drucker.drucker_dashboard_servicer.Path',
+                        new=Mock(return_value=Mock())) as mock_path, \
+                    patch('drucker.drucker_dashboard_servicer.pickle',
+                          new=Mock()) as _, \
+                    patch('builtins.open', new_callable=mock_open) as _:
+                mock_path.return_value.name = 'my_path'
+                return func(*args, **kwargs)
+        return inner_method
+    return test_method
+
+
 class DruckerWorkerServicerTest(unittest.TestCase):
     """Tests for DruckerDashboardServicer.
     """
 
-    def test_ServiceInfo(self):
+    def setUp(self):
+        app.get_model_path = Mock(return_value='test/my_path')
+        app.get_eval_path = Mock(return_value='test/my_eval_path')
+        app.config.SERVICE_INFRA = 'default'
+        app.evaluate = Mock(return_value=(eval_result, details))
+        self._real_time = grpc_testing.strict_real_time()
+        self._fake_time = grpc_testing.strict_fake_time(time.time())
         servicer = DruckerDashboardServicer(logger=system_logger, app=app)
-        request = drucker_pb2.ServiceInfoRequest()
-        response = servicer.ServiceInfo(request, Mock())
+        descriptors_to_services = {
+            target_service: servicer
+        }
+        self._real_time_server = grpc_testing.server_from_dictionary(
+            descriptors_to_services, self._real_time)
+        self._fake_time_server = grpc_testing.server_from_dictionary(
+            descriptors_to_services, self._fake_time)
+
+    def test_ServiceInfo(self):
+        rpc = self._real_time_server.invoke_unary_unary(
+            target_service.methods_by_name['ServiceInfo'], (),
+            drucker_pb2.ServiceInfoRequest(), None)
+        initial_metadata = rpc.initial_metadata()
+        response, trailing_metadata, code, details = rpc.termination()
+        self.assertIs(code, StatusCode.OK)
         self.assertEqual(response.application_name, 'test')
         self.assertEqual(response.service_name, 'test-001')
         self.assertEqual(response.service_level, 'development')
 
-    @patch('drucker.drucker_dashboard_servicer.uuid')
-    @patch('drucker.drucker_dashboard_servicer.shutil')
-    @patch('drucker.drucker_dashboard_servicer.Path')
-    @patch("builtins.open", new_callable=mock_open)
-    def test_UploadModel(self, mock_file, mock_path_class, mock_shutil, mock_uuid):
-        # mock setting
-        mock_path_class.return_value = Mock()
-        mock_path_class.return_value.name = 'my_path'
-        mock_shutil.move.return_value = True
-        mock_uuid.uuid4.return_value = Mock(hex='my_uuid')
-
-        servicer = DruckerDashboardServicer(logger=system_logger, app=app)
-        requests = iter(drucker_pb2.UploadModelRequest(path='my_path', data=b'data') for _ in range(1, 3))
-        response = servicer.UploadModel(requests, Mock())
-
-        tmp_path = './test-model/test/my_uuid'
-        save_path = './test-model/test/my_path'
-
+    @patch_predictor()
+    def test_UploadModel(self):
+        request = drucker_pb2.UploadModelRequest(path='my_path', data=b'data')
+        rpc = self._real_time_server.invoke_stream_unary(
+            target_service.methods_by_name['UploadModel'], (), None)
+        rpc.send_request(request)
+        rpc.send_request(request)
+        rpc.send_request(request)
+        rpc.requests_closed()
+        initial_metadata = rpc.initial_metadata()
+        response, trailing_metadata, code, details = rpc.termination()
+        self.assertIs(code, StatusCode.OK)
         self.assertEqual(response.status, 1)
-        mock_path_class.assert_has_calls([
-            call(tmp_path),
-            call(save_path)
-        ], any_order=True)
-        mock_shutil.move.assert_called_once_with(tmp_path, save_path)
 
-    @patch('drucker.drucker_dashboard_servicer.uuid')
-    @patch('drucker.drucker_dashboard_servicer.shutil')
-    @patch('drucker.drucker_dashboard_servicer.Path')
-    @patch("builtins.open", new_callable=mock_open)
-    def test_InvalidUploadModel(self, mock_file, mock_path_class, mock_shutil, mock_uuid):
-        # mock setting
-        mock_path_class.return_value = Mock()
-        mock_path_class.return_value.name = 'my_path'
-        mock_shutil.move.return_value = True
-        mock_uuid.uuid4.return_value = Mock(hex='my_uuid')
-
-        servicer = DruckerDashboardServicer(logger=system_logger, app=app)
-        requests = iter(drucker_pb2.UploadModelRequest(path='../../../my_path', data=b'data') for _ in range(1, 3))
-        response = servicer.UploadModel(requests, Mock())
-
+    @patch_predictor()
+    def test_InvalidUploadModel(self):
+        request = drucker_pb2.UploadModelRequest(path='../../../my_path', data=b'data')
+        rpc = self._real_time_server.invoke_stream_unary(
+            target_service.methods_by_name['UploadModel'], (), None)
+        rpc.send_request(request)
+        rpc.send_request(request)
+        rpc.send_request(request)
+        rpc.requests_closed()
+        initial_metadata = rpc.initial_metadata()
+        response, trailing_metadata, code, details = rpc.termination()
+        self.assertIs(code, StatusCode.UNKNOWN)
         self.assertEqual(response.status, 0)
 
-    @patch('drucker.test.DummyApp')
-    def test_SwitchModel(self, mock_app):
-        # mock setting
-        mock_app.get_model_path.return_value = 'test/my_path'
-        mock_app.config.SERVICE_INFRA = 'default'
-
-        servicer = DruckerDashboardServicer(logger=system_logger, app=mock_app)
-        request = drucker_pb2.SwitchModelRequest(path='my_path')
-        response = servicer.SwitchModel(request, Mock())
-
+    @patch_predictor()
+    def test_SwitchModel(self):
+        rpc = self._real_time_server.invoke_unary_unary(
+            target_service.methods_by_name['SwitchModel'], (),
+            drucker_pb2.SwitchModelRequest(path='my_path'), None)
+        initial_metadata = rpc.initial_metadata()
+        response, trailing_metadata, code, details = rpc.termination()
+        self.assertIs(code, StatusCode.OK)
         self.assertEqual(response.status, 1)
-        mock_app.load_model.assert_called_once_with()
 
-    @patch('drucker.test.DummyApp')
-    @patch('drucker.drucker_dashboard_servicer.Path')
-    def test_InvalidSwitchModel(self, mock_path_class, mock_app):
-        # mock setting
-        mock_path_class.return_value = Mock()
-        mock_path_class.return_value.name = 'my_path'
-        mock_app.get_model_path.return_value = 'test/my_path'
-        mock_app.config.SERVICE_INFRA = 'default'
-
-        servicer = DruckerDashboardServicer(logger=system_logger, app=mock_app)
-        request = drucker_pb2.SwitchModelRequest(path='../../my_path')
-        response = servicer.SwitchModel(request, Mock())
-
+    @patch_predictor()
+    def test_InvalidSwitchModel(self):
+        rpc = self._real_time_server.invoke_unary_unary(
+            target_service.methods_by_name['SwitchModel'], (),
+            drucker_pb2.SwitchModelRequest(path='../../my_path'), None)
+        initial_metadata = rpc.initial_metadata()
+        response, trailing_metadata, code, details = rpc.termination()
+        self.assertIs(code, StatusCode.UNKNOWN)
         self.assertEqual(response.status, 0)
 
-    @patch("builtins.open", new_callable=mock_open)
-    @patch('drucker.drucker_dashboard_servicer.pickle')
-    def test_EvalauteModel(self, mock_pickle, mock_file):
-        # mock setting
-        eval_result = EvaluateResult(1, 0.8, [0.7], [0.6], [0.5], {'dummy': 0.4})
-        details = [EvaluateDetail('test_input', 'test_label', PredictResult('pre_label', 0.9), False)]
-        app.evaluate = Mock(return_value=(eval_result, details))
+    @patch_predictor()
+    def test_UploadEvaluationData(self):
+        request = drucker_pb2.UploadEvaluationDataRequest(data_path='my_path', data=b'data_')
+        rpc = self._real_time_server.invoke_stream_unary(
+            target_service.methods_by_name['UploadEvaluationData'], (), None)
+        rpc.send_request(request)
+        rpc.send_request(request)
+        rpc.send_request(request)
+        rpc.requests_closed()
+        response, trailing_metadata, code, details = rpc.termination()
+        self.assertEqual(response.status, 1)
 
-        servicer = DruckerDashboardServicer(logger=system_logger, app=app)
-        requests = iter(drucker_pb2.EvaluateModelRequest(data_path='my_path', data=b'data_') for _ in range(1, 3))
-        response = servicer.EvaluateModel(requests, Mock())
+    @patch_predictor()
+    def test_InvalidEvaluationData(self):
+        request = drucker_pb2.UploadEvaluationDataRequest(data_path='../../my_path', data=b'data_')
+        rpc = self._real_time_server.invoke_stream_unary(
+            target_service.methods_by_name['UploadEvaluationData'], (), None)
+        rpc.send_request(request)
+        rpc.send_request(request)
+        rpc.send_request(request)
+        rpc.requests_closed()
+        response, trailing_metadata, code, details = rpc.termination()
+        self.assertEqual(response.status, 0)
 
+    @patch_predictor()
+    def test_EvalauteModel(self):
+        request = drucker_pb2.EvaluateModelRequest(data_path='my_path', result_path='my_path')
+        rpc = self._real_time_server.invoke_stream_unary(
+            target_service.methods_by_name['EvaluateModel'], (), None)
+        rpc.send_request(request)
+        rpc.send_request(request)
+        rpc.send_request(request)
+        rpc.requests_closed()
+        initial_metadata = rpc.initial_metadata()
+        response, trailing_metadata, code, details = rpc.termination()
+        self.assertIs(code, StatusCode.OK)
         self.assertEqual(round(response.metrics.num, 3), eval_result.num)
         self.assertEqual(round(response.metrics.accuracy, 3), eval_result.accuracy)
         self.assertEqual([round(p, 3) for p in response.metrics.precision], eval_result.precision)
@@ -109,39 +160,24 @@ class DruckerWorkerServicerTest(unittest.TestCase):
         self.assertEqual([round(f, 3) for f in response.metrics.fvalue], eval_result.fvalue)
         self.assertEqual(round(response.metrics.option['dummy'], 3), eval_result.option['dummy'])
 
-        app.evaluate.assert_called_once_with(b'data_data_')
-
-        mock_file.assert_has_calls([
-            call("./eval/test/my_path_eval_res.pkl", "wb"),
-            call("./eval/test/my_path_eval_detail.pkl", "wb")
-        ], any_order=True)
-
-    @patch("builtins.open", new_callable=mock_open)
-    @patch('drucker.drucker_dashboard_servicer.pickle')
-    @patch('drucker.drucker_dashboard_servicer.Path')
-    def test_InvalidEvalauteModel(self, mock_path_class, mock_pickle, mock_file):
-        # mock setting
-        mock_path_class.return_value = Mock()
-        mock_path_class.return_value.name = 'my_path'
-        eval_result = EvaluateResult(1, 0.8, [0.7], [0.6], [0.5], {'dummy': 0.4})
-        details = [EvaluateDetail('test_input', 'test_label', PredictResult('pre_label', 0.9), False)]
-        app.evaluate = Mock(return_value=(eval_result, details))
-
-        servicer = DruckerDashboardServicer(logger=system_logger, app=app)
-        requests = iter(drucker_pb2.EvaluateModelRequest(data_path='../../my_path', data=b'data_') for _ in range(1, 3))
-        response = servicer.EvaluateModel(requests, Mock())
-
+    @patch_predictor()
+    def test_InvalidEvalauteModel(self):
+        request = drucker_pb2.EvaluateModelRequest(data_path='../../my_path', result_path='my_res_path')
+        rpc = self._real_time_server.invoke_stream_unary(
+            target_service.methods_by_name['EvaluateModel'], (), None)
+        rpc.send_request(request)
+        rpc.requests_closed()
+        initial_metadata = rpc.initial_metadata()
+        response, trailing_metadata, code, details = rpc.termination()
+        self.assertIs(code, StatusCode.UNKNOWN)
         self.assertEqual(response.metrics.num, 0)
 
-    def test_error_handling(self):
-        # mock setting
-        app.get_model_path = Mock(side_effect=Exception('dummy exception'))
-        mock_context = Mock()
-
-        servicer = DruckerDashboardServicer(logger=system_logger, app=app)
-        request = drucker_pb2.SwitchModelRequest(path='my_path')
-        response = servicer.SwitchModel(request, mock_context)
-
-        self.assertEqual(response.status, 0)
-        mock_context.set_code.assert_called_once_with(grpc.StatusCode.UNKNOWN)
-        mock_context.set_details.assert_called_once_with('dummy exception')
+        request = drucker_pb2.EvaluateModelRequest(data_path='my_path', result_path='../my_res_path')
+        rpc = self._real_time_server.invoke_stream_unary(
+            target_service.methods_by_name['EvaluateModel'], (), None)
+        rpc.send_request(request)
+        rpc.requests_closed()
+        initial_metadata = rpc.initial_metadata()
+        response, trailing_metadata, code, details = rpc.termination()
+        self.assertIs(code, StatusCode.UNKNOWN)
+        self.assertEqual(response.metrics.num, 0)

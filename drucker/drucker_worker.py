@@ -81,5 +81,5 @@ class Drucker(metaclass=ABCMeta):
         raise NotImplemented()
 
     @abstractmethod
-    def evaluate(self, file: bytes) -> Tuple[EvaluateResult, List[EvaluateDetail]]:
+    def evaluate(self, file_path: str) -> Tuple[EvaluateResult, List[EvaluateDetail]]:
         raise NotImplemented()

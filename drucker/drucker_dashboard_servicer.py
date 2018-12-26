@@ -10,7 +10,7 @@ import uuid
 import pickle
 from pathlib import Path
 
-from grpc._server import _Context
+from grpc import ServicerContext
 from typing import Iterator
 
 from .logger import SystemLoggerInterface
@@ -106,7 +106,7 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
 
     def ServiceInfo(self,
                     request: drucker_pb2.ServiceInfoRequest,
-                    context: _Context
+                    context: ServicerContext
                     ) -> drucker_pb2.ServiceInfoResponse:
         """ Get service info.
         """
@@ -118,7 +118,7 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
     @error_handling(drucker_pb2.ModelResponse(status=0, message='Error: Uploading model file.'))
     def UploadModel(self,
                     request_iterator: Iterator[drucker_pb2.UploadModelRequest],
-                    context: _Context
+                    context: ServicerContext
                     ) -> drucker_pb2.ModelResponse:
         """ Upload your latest ML model.
         """
@@ -145,7 +145,7 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
     @error_handling(drucker_pb2.ModelResponse(status=0, message='Error: Switching model file.'))
     def SwitchModel(self,
                     request: drucker_pb2.SwitchModelRequest,
-                    context: _Context
+                    context: ServicerContext
                     ) -> drucker_pb2.ModelResponse:
         """ Switch your ML model to run.
         """
@@ -170,28 +170,52 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
     @error_handling(drucker_pb2.EvaluateModelResponse(metrics=drucker_pb2.EvaluationMetrics()))
     def EvaluateModel(self,
                       request_iterator: Iterator[drucker_pb2.EvaluateModelRequest],
-                      context: _Context
+                      context: ServicerContext
                       ) -> drucker_pb2.EvaluateModelResponse:
         """ Evaluate your ML model and save result.
         """
         first_req = next(request_iterator)
-        save_path = first_req.data_path
-        if not self.is_valid_upload_filename(save_path):
-            raise Exception(f'Error: Invalid evaluation file path specified -> {save_path}')
+        data_path = first_req.data_path
+        result_path = first_req.result_path
+        if not self.is_valid_upload_filename(data_path):
+            raise Exception(f'Error: Invalid evaluation file path specified -> {data_path}')
+        if not self.is_valid_upload_filename(result_path):
+            raise Exception(f'Error: Invalid evaluation result file path specified -> {result_path}')
 
-        test_data = b''.join([first_req.data] + [r.data for r in request_iterator])
-        result, details = self.app.evaluate(test_data)
+        result, details = self.app.evaluate(self.app.get_eval_path(data_path))
         metrics = drucker_pb2.EvaluationMetrics(num=result.num,
                                                 accuracy=result.accuracy,
                                                 precision=result.precision,
                                                 recall=result.recall,
                                                 fvalue=result.fvalue,
                                                 option=result.option)
-        eval_path = self.app.get_eval_path(save_path)
-        Path(eval_path).parent.mkdir(parents=True, exist_ok=True)
-        with open(eval_path + self.EVALUATE_RESULT, 'wb') as f:
+
+        eval_result_path = self.app.get_eval_path(result_path)
+        Path(eval_result_path).parent.mkdir(parents=True, exist_ok=True)
+        with open(eval_result_path + self.EVALUATE_RESULT, 'wb') as f:
             pickle.dump(result, f)
-        with open(eval_path + self.EVALUATE_DETAIL, 'wb') as f:
+        with open(eval_result_path + self.EVALUATE_DETAIL, 'wb') as f:
             pickle.dump(details, f)
 
         return drucker_pb2.EvaluateModelResponse(metrics=metrics)
+
+    @error_handling(drucker_pb2.UploadEvaluationDataResponse(status=0, message='Error: Uploading evaluation data.'))
+    def UploadEvaluationData(self,
+                             request_iterator: Iterator[drucker_pb2.UploadEvaluationDataRequest],
+                             context: ServicerContext
+                             ) -> drucker_pb2.UploadEvaluationDataResponse:
+        """ Save evaluation data
+        """
+        first_req = next(request_iterator)
+        save_path = first_req.data_path
+        if not self.is_valid_upload_filename(save_path):
+            raise Exception(f'Error: Invalid evaluation file path specified -> {save_path}')
+
+        eval_data = b''.join([first_req.data] + [r.data for r in request_iterator])
+        eval_path = self.app.get_eval_path(save_path)
+        Path(eval_path).parent.mkdir(parents=True, exist_ok=True)
+        with open(eval_path, 'wb') as f:
+            f.write(eval_data)
+
+        return drucker_pb2.UploadEvaluationDataResponse(status=1,
+                                                        message='Success: Uploading evaluation data.')
