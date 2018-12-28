@@ -62,7 +62,6 @@ class DruckerWorkerServicerTest(unittest.TestCase):
         rpc = self._real_time_server.invoke_unary_unary(
             target_service.methods_by_name['ServiceInfo'], (),
             drucker_pb2.ServiceInfoRequest(), None)
-        initial_metadata = rpc.initial_metadata()
         response, trailing_metadata, code, details = rpc.termination()
         self.assertIs(code, StatusCode.OK)
         self.assertEqual(response.application_name, 'test')
@@ -78,7 +77,6 @@ class DruckerWorkerServicerTest(unittest.TestCase):
         rpc.send_request(request)
         rpc.send_request(request)
         rpc.requests_closed()
-        initial_metadata = rpc.initial_metadata()
         response, trailing_metadata, code, details = rpc.termination()
         self.assertIs(code, StatusCode.OK)
         self.assertEqual(response.status, 1)
@@ -92,7 +90,6 @@ class DruckerWorkerServicerTest(unittest.TestCase):
         rpc.send_request(request)
         rpc.send_request(request)
         rpc.requests_closed()
-        initial_metadata = rpc.initial_metadata()
         response, trailing_metadata, code, details = rpc.termination()
         self.assertIs(code, StatusCode.UNKNOWN)
         self.assertEqual(response.status, 0)
@@ -102,7 +99,6 @@ class DruckerWorkerServicerTest(unittest.TestCase):
         rpc = self._real_time_server.invoke_unary_unary(
             target_service.methods_by_name['SwitchModel'], (),
             drucker_pb2.SwitchModelRequest(path='my_path'), None)
-        initial_metadata = rpc.initial_metadata()
         response, trailing_metadata, code, details = rpc.termination()
         self.assertIs(code, StatusCode.OK)
         self.assertEqual(response.status, 1)
@@ -112,7 +108,6 @@ class DruckerWorkerServicerTest(unittest.TestCase):
         rpc = self._real_time_server.invoke_unary_unary(
             target_service.methods_by_name['SwitchModel'], (),
             drucker_pb2.SwitchModelRequest(path='../../my_path'), None)
-        initial_metadata = rpc.initial_metadata()
         response, trailing_metadata, code, details = rpc.termination()
         self.assertIs(code, StatusCode.UNKNOWN)
         self.assertEqual(response.status, 0)
@@ -150,7 +145,6 @@ class DruckerWorkerServicerTest(unittest.TestCase):
         rpc.send_request(request)
         rpc.send_request(request)
         rpc.requests_closed()
-        initial_metadata = rpc.initial_metadata()
         response, trailing_metadata, code, details = rpc.termination()
         self.assertIs(code, StatusCode.OK)
         self.assertEqual(round(response.metrics.num, 3), eval_result.num)
@@ -167,7 +161,6 @@ class DruckerWorkerServicerTest(unittest.TestCase):
             target_service.methods_by_name['EvaluateModel'], (), None)
         rpc.send_request(request)
         rpc.requests_closed()
-        initial_metadata = rpc.initial_metadata()
         response, trailing_metadata, code, details = rpc.termination()
         self.assertIs(code, StatusCode.UNKNOWN)
         self.assertEqual(response.metrics.num, 0)
@@ -177,7 +170,6 @@ class DruckerWorkerServicerTest(unittest.TestCase):
             target_service.methods_by_name['EvaluateModel'], (), None)
         rpc.send_request(request)
         rpc.requests_closed()
-        initial_metadata = rpc.initial_metadata()
         response, trailing_metadata, code, details = rpc.termination()
         self.assertIs(code, StatusCode.UNKNOWN)
         self.assertEqual(response.metrics.num, 0)
