@@ -185,7 +185,7 @@ class DruckerWorkerServicerTest(unittest.TestCase):
         self.assertEqual(response.metrics.num, 0)
 
     def __send_eval_result(self, size, take_times):
-        app.get_evaluate_data = Mock(return_value=iter(eval_detail for _ in range(size)))
+        app.get_evaluate_detail = Mock(return_value=iter(eval_detail for _ in range(size)))
         rpc = self._real_time_server.invoke_unary_stream(
             target_service.methods_by_name['EvaluationResult'], (),
             drucker_pb2.EvaluationResultRequest(data_path='my_path', result_path='my_path'), None)
