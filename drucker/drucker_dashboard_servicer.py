@@ -84,6 +84,9 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
     EVALUATE_RESULT = '_eval_res.pkl'
     EVALUATE_DETAIL = '_eval_detail.pkl'
 
+    CHUNK_SIZE = 100
+    BYTE_LIMIT = 4190000
+
     def __init__(self, logger: SystemLoggerInterface, app: Drucker):
         self.logger = logger
         self.app = app
@@ -248,12 +251,9 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
                                                 fvalue=result.fvalue,
                                                 option=result.option)
 
-        DETAIL_UNIT_SIZE = 100
-        BYTE_LIMIT = 4190000
         detail_chunks = []
         detail_chunk = []
         metrics_size = sys.getsizeof(metrics)
-
         for detail in self.app.get_evaluate_data(self.app.get_eval_path(data_path), result_details):
             detail_chunk.append(drucker_pb2.EvaluationResultResponse.Detail(
                 input=self.get_io_by_type(detail.input),
@@ -262,8 +262,8 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
                 score=self.get_score_by_type(detail.result.result.score),
                 is_correct=detail.result.is_correct
             ))
-            if len(detail_chunk) == DETAIL_UNIT_SIZE:
-                if metrics_size + sys.getsizeof(detail_chunk + detail_chunks) < BYTE_LIMIT:
+            if len(detail_chunk) == self.CHUNK_SIZE:
+                if metrics_size + sys.getsizeof(detail_chunk + detail_chunks) < self.BYTE_LIMIT:
                     detail_chunks.extend(detail_chunk)
                 else:
                     yield drucker_pb2.EvaluationResultResponse(metrics=metrics, detail=detail_chunks)
@@ -271,7 +271,7 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
                 detail_chunk = []
 
         if len(detail_chunks + detail_chunk) > 0:
-            if metrics_size + sys.getsizeof(detail_chunk + detail_chunks) < BYTE_LIMIT:
+            if metrics_size + sys.getsizeof(detail_chunk + detail_chunks) < self.BYTE_LIMIT:
                 detail_chunks.extend(detail_chunk)
                 yield drucker_pb2.EvaluationResultResponse(metrics=metrics, detail=detail_chunks)
             else:
@@ -294,4 +294,3 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
             return score
         else:
             return [score]
-
