@@ -254,7 +254,7 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
         detail_chunks = []
         detail_chunk = []
         metrics_size = sys.getsizeof(metrics)
-        for detail in self.app.get_evaluate_data(self.app.get_eval_path(data_path), result_details):
+        for detail in self.app.get_evaluate_detail(self.app.get_eval_path(data_path), result_details):
             detail_chunk.append(drucker_pb2.EvaluationResultResponse.Detail(
                 input=self.get_io_by_type(detail.input),
                 label=self.get_io_by_type(detail.label),
