@@ -17,7 +17,7 @@ eval_result = EvaluateResult(1, 0.8, [0.7], [0.6], [0.5], {'dummy': 0.4})
 eval_result_details = [EvaluateResultDetail(PredictResult('pre_label', 0.9), False)]
 eval_detail = EvaluateDetail('input', 'label', eval_result_details[0])
 
-# Overwrite CHUNK_SIZE and BYTE_LIMIT to smaller values for tesging
+# Overwrite CHUNK_SIZE and BYTE_LIMIT to smaller values for testing
 chunk_size = 3
 DruckerDashboardServicer.CHUNK_SIZE = chunk_size
 # response byte size will be greater than BYTE_LIMIT in 2nd loop
