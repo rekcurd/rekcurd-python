@@ -12,10 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 from setuptools import setup
 
-VERSION = "0.4.4a"
-PACKAGE_NAME = "drucker"
+
+here = os.path.abspath(os.path.dirname(__file__))
+exec(open(os.path.join(here, 'drucker', '_project.py')).read())
+exec(open(os.path.join(here, 'drucker', '_version.py')).read())
+PACKAGE_NAME = __project__  # NOQA
+VERSION = __version__  # NOQA
 DEVELOPMENT_STATUS = "3 - Alpha"
 
 # To install the library, run the following

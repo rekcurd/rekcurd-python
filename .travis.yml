@@ -1,19 +1,19 @@
-# ref: https://docs.travis-ci.com/user/languages/python
 language: python
 dist: trusty
 sudo: true
 services:
 - docker
-
 matrix:
   include:
   - python: 3.6
     env: TOXENV=py36
   - python: 3.6
     env: TOXENV=coverage,codecov
-
 install:
 - pip install tox
-
 script:
 - tox
+notifications:
+  email: false
+  slack:
+    secure: qXXJJKQCThatS5lv1r0nBaHSUsgDgLcLnGodcr6se/Q4SEnoKo60yHYctWKqS67x0OwKX7JpCgdK1YQ5r6uZdzUy8xQyLCD+qGe1XZK0ndJ1XuV5jHvwnzK+ODVK71win75NmGc4g2cblfOYO83Oz9gFDOOLThNXiw2yirKyw9tPmClLK7OU1VwuH6vDywXQHG6Ii5ub5MoOxgwQ3P2v0dothYrtnoDVZrUMUNact+ymYBzcWQcrwSLCStXTgwQ9sRAj3y3wHDkGy/hXMHepM0nNn9A5OgvqRgb2jG3LUjtRZ9vxvHYWUR/c+DgVNp0zpH59OlYv53L/cN4KxcQL3vObxf8O3hd/VzNq9PmPn104epfYF0UokgrtGEmNjTeNRMzwCKAYul4wZsYZ40UhHHBomMfO0ZN3ftx3ofRTOHxAJrdwDP6gZCdDFFWeuKcGBhoU7GLHtYXVOOmuW+/XtTDfpY3t9HTfdBfNusT0jaseUVPwmO+iOXXBRHsg/sMuLl48jCdkLPu5qI6t6EOuRYddk9PAtJ1uTtk4n4hvv3mgktDFfIVhOjuhTNcCDInssMJaX2kY+7Iqw37FpQw+E4nJ+gvEeNRQH04D5VoZfhKZeMYNj2Nvr312pCTVBfjbfc5Shxpqmy6XCFnwukJaPmAeNr0vh7JokuLaNneVvEI=

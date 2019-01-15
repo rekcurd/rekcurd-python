@@ -1,0 +1,1 @@
+__project__ = 'drucker'
