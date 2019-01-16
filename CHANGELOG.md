@@ -1,5 +1,14 @@
 # Change Log
 
+## [v0.4.4](https://github.com/rekcurd/drucker/tree/v0.4.4) (2019-01-15)
+[Full Changelog](https://github.com/rekcurd/drucker/compare/v0.4.3...v0.4.4)
+
+**Merged pull requests:**
+
+- Add slack notification [\#26](https://github.com/rekcurd/drucker/pull/26) ([keigohtr](https://github.com/keigohtr))
+- implement method for EvaluationResult protocol [\#24](https://github.com/rekcurd/drucker/pull/24) ([yuki-mt](https://github.com/yuki-mt))
+- Close `open\(file\)` [\#23](https://github.com/rekcurd/drucker/pull/23) ([keigohtr](https://github.com/keigohtr))
+
 ## [v0.4.3](https://github.com/rekcurd/drucker/tree/v0.4.3) (2018-12-26)
 [Full Changelog](https://github.com/rekcurd/drucker/compare/v0.4.2...v0.4.3)
 
