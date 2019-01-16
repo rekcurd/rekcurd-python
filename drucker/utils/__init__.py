@@ -9,6 +9,7 @@ from enum import Enum
 from typing import Union, List, Dict, NamedTuple
 
 
+PredictInput = Union[str, bytes, List[str], List[int], List[float]]
 PredictLabel = Union[str, bytes, List[str], List[int], List[float]]
 PredictScore = Union[float, List[float]]
 
@@ -18,7 +19,8 @@ class DruckerConfig:
         settings_yaml = os.getenv("DRUCKER_SETTINGS_YAML", config_file)
         config = dict()
         if settings_yaml is not None:
-            config = yaml.load(open(settings_yaml, 'r'))
+            with open(settings_yaml, 'r') as f:
+                config = yaml.load(f)
         self.TEST_MODE = str(os.getenv("DRUCKER_TEST_MODE", config.get("test", "False"))).lower() == 'true'
         self.SERVICE_PORT = os.getenv("DRUCKER_SERVICE_PORT", config.get("app.port", "5000"))
         self.APPLICATION_NAME = os.getenv("DRUCKER_APPLICATION_NAME", config["app.name"])
@@ -87,9 +89,15 @@ class EvaluateResult:
             self.option = option
 
 
-class EvaluateDetail(NamedTuple):
+class EvaluateResultDetail(NamedTuple):
     result: PredictResult
     is_correct: bool
+
+
+class EvaluateDetail(NamedTuple):
+    input: PredictInput
+    label: PredictLabel
+    result: EvaluateResultDetail
 
 
 incoming_headers = [

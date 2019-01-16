@@ -1,5 +1,15 @@
 # Change Log
 
+## [v0.4.3](https://github.com/rekcurd/drucker/tree/v0.4.3) (2018-12-26)
+[Full Changelog](https://github.com/rekcurd/drucker/compare/v0.4.2...v0.4.3)
+
+**Merged pull requests:**
+
+- Update README.md [\#22](https://github.com/rekcurd/drucker/pull/22) ([keigohtr](https://github.com/keigohtr))
+- \[Hotfix\] fix ServiceEnvType if statement and make check strict [\#21](https://github.com/rekcurd/drucker/pull/21) ([yuki-mt](https://github.com/yuki-mt))
+- separate evaluate and upload test data [\#20](https://github.com/rekcurd/drucker/pull/20) ([yuki-mt](https://github.com/yuki-mt))
+- Istio support [\#19](https://github.com/rekcurd/drucker/pull/19) ([keigohtr](https://github.com/keigohtr))
+
 ## [v0.4.2](https://github.com/rekcurd/drucker/tree/v0.4.2) (2018-11-28)
 [Full Changelog](https://github.com/rekcurd/drucker/compare/v0.4.1...v0.4.2)
 

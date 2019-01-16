@@ -1,4 +1,5 @@
 import unittest
+import sys
 import time
 from functools import wraps
 from unittest.mock import patch, Mock, mock_open
@@ -7,13 +8,20 @@ from grpc import StatusCode
 
 from drucker.protobuf import drucker_pb2
 from drucker.drucker_dashboard_servicer import DruckerDashboardServicer
-from drucker.utils import EvaluateResult, EvaluateDetail, PredictResult
+from drucker.utils import EvaluateResult, EvaluateResultDetail, PredictResult, EvaluateDetail
 from . import app, system_logger
 
 
 target_service = drucker_pb2.DESCRIPTOR.services_by_name['DruckerDashboard']
 eval_result = EvaluateResult(1, 0.8, [0.7], [0.6], [0.5], {'dummy': 0.4})
-details = [EvaluateDetail(PredictResult('pre_label', 0.9), False)]
+eval_result_details = [EvaluateResultDetail(PredictResult('pre_label', 0.9), False)]
+eval_detail = EvaluateDetail('input', 'label', eval_result_details[0])
+
+# Overwrite CHUNK_SIZE and BYTE_LIMIT to smaller values for testing
+chunk_size = 3
+DruckerDashboardServicer.CHUNK_SIZE = chunk_size
+# response byte size will be greater than BYTE_LIMIT in 2nd loop
+DruckerDashboardServicer.BYTE_LIMIT = 190
 
 
 def patch_predictor():
@@ -31,6 +39,8 @@ def patch_predictor():
                         new=Mock(return_value=Mock())) as mock_path, \
                     patch('drucker.drucker_dashboard_servicer.pickle',
                           new=Mock()) as _, \
+                    patch('drucker.drucker_dashboard_servicer.pickle.load',
+                          new=Mock(return_value=eval_result)) as _, \
                     patch('builtins.open', new_callable=mock_open) as _:
                 mock_path.return_value.name = 'my_path'
                 return func(*args, **kwargs)
@@ -46,7 +56,7 @@ class DruckerWorkerServicerTest(unittest.TestCase):
         app.get_model_path = Mock(return_value='test/my_path')
         app.get_eval_path = Mock(return_value='test/my_eval_path')
         app.config.SERVICE_INFRA = 'default'
-        app.evaluate = Mock(return_value=(eval_result, details))
+        app.evaluate = Mock(return_value=(eval_result, eval_result_details))
         self._real_time = grpc_testing.strict_real_time()
         self._fake_time = grpc_testing.strict_fake_time(time.time())
         servicer = DruckerDashboardServicer(logger=system_logger, app=app)
@@ -62,7 +72,6 @@ class DruckerWorkerServicerTest(unittest.TestCase):
         rpc = self._real_time_server.invoke_unary_unary(
             target_service.methods_by_name['ServiceInfo'], (),
             drucker_pb2.ServiceInfoRequest(), None)
-        initial_metadata = rpc.initial_metadata()
         response, trailing_metadata, code, details = rpc.termination()
         self.assertIs(code, StatusCode.OK)
         self.assertEqual(response.application_name, 'test')
@@ -78,7 +87,6 @@ class DruckerWorkerServicerTest(unittest.TestCase):
         rpc.send_request(request)
         rpc.send_request(request)
         rpc.requests_closed()
-        initial_metadata = rpc.initial_metadata()
         response, trailing_metadata, code, details = rpc.termination()
         self.assertIs(code, StatusCode.OK)
         self.assertEqual(response.status, 1)
@@ -92,7 +100,6 @@ class DruckerWorkerServicerTest(unittest.TestCase):
         rpc.send_request(request)
         rpc.send_request(request)
         rpc.requests_closed()
-        initial_metadata = rpc.initial_metadata()
         response, trailing_metadata, code, details = rpc.termination()
         self.assertIs(code, StatusCode.UNKNOWN)
         self.assertEqual(response.status, 0)
@@ -102,7 +109,6 @@ class DruckerWorkerServicerTest(unittest.TestCase):
         rpc = self._real_time_server.invoke_unary_unary(
             target_service.methods_by_name['SwitchModel'], (),
             drucker_pb2.SwitchModelRequest(path='my_path'), None)
-        initial_metadata = rpc.initial_metadata()
         response, trailing_metadata, code, details = rpc.termination()
         self.assertIs(code, StatusCode.OK)
         self.assertEqual(response.status, 1)
@@ -112,7 +118,6 @@ class DruckerWorkerServicerTest(unittest.TestCase):
         rpc = self._real_time_server.invoke_unary_unary(
             target_service.methods_by_name['SwitchModel'], (),
             drucker_pb2.SwitchModelRequest(path='../../my_path'), None)
-        initial_metadata = rpc.initial_metadata()
         response, trailing_metadata, code, details = rpc.termination()
         self.assertIs(code, StatusCode.UNKNOWN)
         self.assertEqual(response.status, 0)
@@ -150,7 +155,6 @@ class DruckerWorkerServicerTest(unittest.TestCase):
         rpc.send_request(request)
         rpc.send_request(request)
         rpc.requests_closed()
-        initial_metadata = rpc.initial_metadata()
         response, trailing_metadata, code, details = rpc.termination()
         self.assertIs(code, StatusCode.OK)
         self.assertEqual(round(response.metrics.num, 3), eval_result.num)
@@ -167,7 +171,6 @@ class DruckerWorkerServicerTest(unittest.TestCase):
             target_service.methods_by_name['EvaluateModel'], (), None)
         rpc.send_request(request)
         rpc.requests_closed()
-        initial_metadata = rpc.initial_metadata()
         response, trailing_metadata, code, details = rpc.termination()
         self.assertIs(code, StatusCode.UNKNOWN)
         self.assertEqual(response.metrics.num, 0)
@@ -177,7 +180,71 @@ class DruckerWorkerServicerTest(unittest.TestCase):
             target_service.methods_by_name['EvaluateModel'], (), None)
         rpc.send_request(request)
         rpc.requests_closed()
-        initial_metadata = rpc.initial_metadata()
         response, trailing_metadata, code, details = rpc.termination()
         self.assertIs(code, StatusCode.UNKNOWN)
         self.assertEqual(response.metrics.num, 0)
+
+    def __send_eval_result(self, size, take_times):
+        app.get_evaluate_detail = Mock(return_value=iter(eval_detail for _ in range(size)))
+        rpc = self._real_time_server.invoke_unary_stream(
+            target_service.methods_by_name['EvaluationResult'], (),
+            drucker_pb2.EvaluationResultRequest(data_path='my_path', result_path='my_path'), None)
+        responses = [rpc.take_response() for _ in range(take_times)]
+        return rpc, responses
+
+    @patch_predictor()
+    def test_EvalautionResult(self):
+        rpc, responses = self.__send_eval_result(1, 1)
+        response = responses[0]
+
+        self.assertEqual(round(response.metrics.num, 3), eval_result.num)
+        self.assertEqual(round(response.metrics.accuracy, 3), eval_result.accuracy)
+        self.assertEqual([round(p, 3) for p in response.metrics.precision], eval_result.precision)
+        self.assertEqual([round(r, 3) for r in response.metrics.recall], eval_result.recall)
+        self.assertEqual([round(f, 3) for f in response.metrics.fvalue], eval_result.fvalue)
+        self.assertEqual(round(response.metrics.option['dummy'], 3), eval_result.option['dummy'])
+
+        self.assertEqual(len(response.detail), 1)
+        detail = response.detail[0]
+        self.assertEqual(detail.input.str.val, [eval_detail.input])
+        self.assertEqual(detail.label.str.val, [eval_detail.label])
+        self.assertEqual(detail.output.str.val, [eval_result_details[0].result.label])
+        self.assertEqual([round(s, 3) for s in detail.score], [eval_result_details[0].result.score])
+        self.assertEqual(detail.is_correct, eval_result_details[0].is_correct)
+
+        with self.assertRaises(ValueError):
+            rpc.take_response()
+
+        trailing_metadata, code, details = rpc.termination()
+        self.assertIs(code, StatusCode.OK)
+
+    @patch_predictor()
+    def test_EvalautionResult_multi_response(self):
+        # chunk_size * 3
+        rpc, responses = self.__send_eval_result(chunk_size * 3, 3)
+        for r in responses:
+            self.assertEqual(len(r.detail), chunk_size)
+        with self.assertRaises(ValueError):
+            rpc.take_response()
+        rpc.termination()
+
+        # chunk_size * 2 + 1
+        rpc, responses = self.__send_eval_result(chunk_size * 2 + 1, 2)
+        self.assertEqual(len(responses[0].detail), chunk_size)
+        self.assertEqual(len(responses[1].detail), chunk_size + 1)
+        with self.assertRaises(ValueError):
+            rpc.take_response()
+        rpc.termination()
+
+    def test_get_io_by_type(self):
+        servicer = DruckerDashboardServicer(logger=system_logger, app=app)
+        self.assertEqual(servicer.get_io_by_type('test').str.val, ['test'])
+        self.assertEqual(servicer.get_io_by_type(['test', 'test2']).str.val, ['test', 'test2'])
+        self.assertEqual(servicer.get_io_by_type(2).tensor.val, [2])
+        self.assertEqual(servicer.get_io_by_type([2, 3]).tensor.val, [2, 3])
+
+    def test_get_score_by_type(self):
+        servicer = DruckerDashboardServicer(logger=system_logger, app=app)
+        score = 4.5
+        self.assertEqual(servicer.get_score_by_type(score), [score])
+        self.assertEqual(servicer.get_score_by_type([score]), [score])
