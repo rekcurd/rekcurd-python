@@ -1,1 +1,1 @@
-__project__ = 'drucker'
+__project__ = 'rekcurd'

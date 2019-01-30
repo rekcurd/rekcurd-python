@@ -1,5 +1,12 @@
 # Change Log
 
+## [v0.4.5](https://github.com/rekcurd/drucker/tree/v0.4.5) (2019-01-30)
+[Full Changelog](https://github.com/rekcurd/drucker/compare/v0.4.4...v0.4.5)
+
+**Merged pull requests:**
+
+- Unittest py37 support [\#28](https://github.com/rekcurd/drucker/pull/28) ([keigohtr](https://github.com/keigohtr))
+
 ## [v0.4.4](https://github.com/rekcurd/drucker/tree/v0.4.4) (2019-01-15)
 [Full Changelog](https://github.com/rekcurd/drucker/compare/v0.4.3...v0.4.4)
 
