@@ -56,7 +56,7 @@ setup(
     author_email="",
     author="Drucker",
     license="Apache License Version 2.0",
-    url="https://github.com/drucker/drucker",
+    url="https://github.com/rekcurd/rekcurd-python",
     keywords=["Drucker", "Kubernetes"],
     install_requires=REQUIRES,
     tests_require=TESTS_REQUIRES,
