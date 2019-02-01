@@ -1,8 +1,8 @@
 # Rekcurd
 
-[![Build Status](https://travis-ci.com/rekcurd/python-rekcurd.svg?branch=master)](https://travis-ci.com/rekcurd/python-rekcurd)
+[![Build Status](https://travis-ci.com/rekcurd/rekcurd-python.svg?branch=master)](https://travis-ci.com/rekcurd/rekcurd-python)
 [![PyPI version](https://badge.fury.io/py/rekcurd.svg)](https://badge.fury.io/py/rekcurd)
-[![codecov](https://codecov.io/gh/rekcurd/python-rekcurd/branch/master/graph/badge.svg)](https://codecov.io/gh/rekcurd/python-rekcurd "Non-generated packages only")
+[![codecov](https://codecov.io/gh/rekcurd/rekcurd-python/branch/master/graph/badge.svg)](https://codecov.io/gh/rekcurd/rekcurd-python "Non-generated packages only")
 [![pypi supported versions](https://img.shields.io/pypi/pyversions/rekcurd.svg)](https://pypi.python.org/pypi/rekcurd)
 
 Rekcurd is the Project for serving ML module. This is a gRPC micro-framework and it can be used like [Flask](http://flask.pocoo.org/). 
@@ -13,7 +13,7 @@ https://github.com/rekcurd/community
 
 
 ## Components
-- [Rekcurd](https://github.com/rekcurd/python-rekcurd) (here): Project for serving ML module.
+- [Rekcurd](https://github.com/rekcurd/rekcurd-python) (here): Project for serving ML module.
 - [Rekcurd-dashboard](https://github.com/rekcurd/dashboard): Project for managing ML model and deploying ML module.
 - [Rekcurd-client](https://github.com/rekcurd/python-client): Project for integrating ML module. 
 
@@ -22,8 +22,8 @@ https://github.com/rekcurd/community
 From source:
 
 ```bash
-$ git clone --recursive https://github.com/rekcurd/python-rekcurd.git
-$ cd python-rekcurd
+$ git clone --recursive https://github.com/rekcurd/rekcurd-python.git
+$ cd rekcurd-python
 $ python setup.py install
 ```
 
