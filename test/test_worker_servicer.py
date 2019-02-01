@@ -7,11 +7,11 @@ from unittest.mock import patch, Mock
 import grpc_testing
 from grpc import StatusCode
 
-from drucker.protobuf import drucker_pb2
-from drucker.utils import PredictResult
+from rekcurd.protobuf import rekcurd_pb2
+from rekcurd.utils import PredictResult
 
 
-target_service = drucker_pb2.DESCRIPTOR.services_by_name['DruckerWorker']
+target_service = rekcurd_pb2.DESCRIPTOR.services_by_name['RekcurdWorker']
 
 
 def patch_predictor(input_type, output_type):
@@ -20,11 +20,11 @@ def patch_predictor(input_type, output_type):
     """
 
     _prediction_value_map = {
-        Type.STRING: PredictResult('Drucker', 1.0, option={}),
+        Type.STRING: PredictResult('Rekcurd', 1.0, option={}),
         Type.BYTES: PredictResult(b'\x8f\xfa;\xc8a\xa3T%', 1.0, option={}),
         Type.ARRAY_INT: PredictResult([2, 3, 5, 7], [1.0, 1.0, 1.0, 1.0], option={}),
         Type.ARRAY_FLOAT: PredictResult([0.78341155, 0.03166816, 0.92745938], [1.0, 1.0, 1.0], option={}),
-        Type.ARRAY_STRING: PredictResult(['Drucker', 'is', 'awesome'], [1.0, 1.0, 1.0], option={}),
+        Type.ARRAY_STRING: PredictResult(['Rekcurd', 'is', 'awesome'], [1.0, 1.0, 1.0], option={}),
     }
 
     def test_method(func):
@@ -42,58 +42,58 @@ def patch_predictor(input_type, output_type):
     return test_method
 
 
-class DruckerWorkerServicerTest(unittest.TestCase):
-    """Tests for DruckerWorkerServicer."""
+class RekcurdWorkerServicerTest(unittest.TestCase):
+    """Tests for RekcurdWorkerServicer."""
 
     def fake_string_request(self):
-        request = drucker_pb2.StringInput()
+        request = rekcurd_pb2.StringInput()
         request.input = 'Rekcurd'
         request.option.val = '{}'
         return request
 
     def fake_bytes_request(self):
-        request = drucker_pb2.BytesInput()
+        request = rekcurd_pb2.BytesInput()
         request.input = b'\x9cT\xee\xca\x19\xbb\xa44\xfcS'
         request.option.val = '{}'
         return request
 
     def fake_arrint_request(self):
-        request = drucker_pb2.ArrIntInput()
+        request = rekcurd_pb2.ArrIntInput()
         request.input.extend([218, 81, 2, 215, 28])
         request.option.val = '{}'
         return request
 
     def fake_arrfloat_request(self):
-        request = drucker_pb2.ArrFloatInput()
+        request = rekcurd_pb2.ArrFloatInput()
         request.input.extend([0.22861859, 0.90036856, 0.03665003, 0.69281863, 0.23225956])
         request.option.val = '{}'
         return request
 
     def fake_arrstring_request(self):
-        request = drucker_pb2.ArrStringInput()
-        request.input.extend(['Drucker', 'Docker', 'Rekcurd', 'Rekcod'])
+        request = rekcurd_pb2.ArrStringInput()
+        request.input.extend(['Rekcurd', 'Docker', 'Rekcurd', 'Rekcod'])
         request.option.val = '{}'
         return request
 
     def assertStringResponse(self, response):
-        self.assertIsInstance(response, drucker_pb2.StringOutput)
+        self.assertIsInstance(response, rekcurd_pb2.StringOutput)
 
     def assertBytesResponse(self, response):
-        self.assertIsInstance(response, drucker_pb2.BytesOutput)
+        self.assertIsInstance(response, rekcurd_pb2.BytesOutput)
 
     def assertArrIntResponse(self, response):
-        self.assertIsInstance(response, drucker_pb2.ArrIntOutput)
+        self.assertIsInstance(response, rekcurd_pb2.ArrIntOutput)
 
     def assertArrFloatResponse(self, response):
-        self.assertIsInstance(response, drucker_pb2.ArrFloatOutput)
+        self.assertIsInstance(response, rekcurd_pb2.ArrFloatOutput)
 
     def assertArrStringResponse(self, response):
-        self.assertIsInstance(response, drucker_pb2.ArrStringOutput)
+        self.assertIsInstance(response, rekcurd_pb2.ArrStringOutput)
 
     def setUp(self):
         self._real_time = grpc_testing.strict_real_time()
         self._fake_time = grpc_testing.strict_fake_time(time.time())
-        servicer = drucker.drucker_worker_servicer.DruckerWorkerServicer(logger=service_logger, app=app)
+        servicer = rekcurd.rekcurd_worker_servicer.RekcurdWorkerServicer(logger=service_logger, app=app)
         descriptors_to_services = {
             target_service: servicer
         }

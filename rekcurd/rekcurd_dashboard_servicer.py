@@ -15,8 +15,8 @@ from grpc import ServicerContext
 from typing import Iterator, Union, List
 
 from .logger import SystemLoggerInterface
-from .drucker_worker import Drucker, db, ModelAssignment
-from .protobuf import drucker_pb2, drucker_pb2_grpc
+from .rekcurd_worker import Rekcurd, db, ModelAssignment
+from .protobuf import rekcurd_pb2, rekcurd_pb2_grpc
 from .utils import PredictInput, PredictLabel, PredictScore
 
 
@@ -68,7 +68,7 @@ def error_handling(error_response):
     return _wrapper_maker
 
 
-class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
+class RekcurdDashboardServicer(rekcurd_pb2_grpc.RekcurdDashboardServicer):
     """ gRPC servicer to manage environment
 
     - Applications
@@ -87,7 +87,7 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
     CHUNK_SIZE = 100
     BYTE_LIMIT = 4190000
 
-    def __init__(self, logger: SystemLoggerInterface, app: Drucker):
+    def __init__(self, logger: SystemLoggerInterface, app: Rekcurd):
         self.logger = logger
         self.app = app
 
@@ -110,21 +110,21 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
         return False
 
     def ServiceInfo(self,
-                    request: drucker_pb2.ServiceInfoRequest,
+                    request: rekcurd_pb2.ServiceInfoRequest,
                     context: ServicerContext
-                    ) -> drucker_pb2.ServiceInfoResponse:
+                    ) -> rekcurd_pb2.ServiceInfoResponse:
         """ Get service info.
         """
-        return drucker_pb2.ServiceInfoResponse(
+        return rekcurd_pb2.ServiceInfoResponse(
             application_name=self.app.config.APPLICATION_NAME,
             service_name=self.app.config.SERVICE_NAME,
             service_level=self.app.config.SERVICE_LEVEL_ENUM.value)
 
-    @error_handling(drucker_pb2.ModelResponse(status=0, message='Error: Uploading model file.'))
+    @error_handling(rekcurd_pb2.ModelResponse(status=0, message='Error: Uploading model file.'))
     def UploadModel(self,
-                    request_iterator: Iterator[drucker_pb2.UploadModelRequest],
+                    request_iterator: Iterator[rekcurd_pb2.UploadModelRequest],
                     context: ServicerContext
-                    ) -> drucker_pb2.ModelResponse:
+                    ) -> rekcurd_pb2.ModelResponse:
         """ Upload your latest ML model.
         """
         first_req = next(request_iterator)
@@ -144,14 +144,14 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
         model_path = self.app.get_model_path(save_path)
         Path(model_path).parent.mkdir(parents=True, exist_ok=True)
         shutil.move(tmp_path, model_path)
-        return drucker_pb2.ModelResponse(status=1,
+        return rekcurd_pb2.ModelResponse(status=1,
                                          message='Success: Uploading model file.')
 
-    @error_handling(drucker_pb2.ModelResponse(status=0, message='Error: Switching model file.'))
+    @error_handling(rekcurd_pb2.ModelResponse(status=0, message='Error: Switching model file.'))
     def SwitchModel(self,
-                    request: drucker_pb2.SwitchModelRequest,
+                    request: rekcurd_pb2.SwitchModelRequest,
                     context: ServicerContext
-                    ) -> drucker_pb2.ModelResponse:
+                    ) -> rekcurd_pb2.ModelResponse:
         """ Switch your ML model to run.
         """
         if not self.is_valid_upload_filename(request.path):
@@ -169,14 +169,14 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
             self.app.model_path = self.app.get_model_path()
             self.app.load_model()
 
-        return drucker_pb2.ModelResponse(status=1,
+        return rekcurd_pb2.ModelResponse(status=1,
                                          message='Success: Switching model file.')
 
-    @error_handling(drucker_pb2.EvaluateModelResponse())
+    @error_handling(rekcurd_pb2.EvaluateModelResponse())
     def EvaluateModel(self,
-                      request_iterator: Iterator[drucker_pb2.EvaluateModelRequest],
+                      request_iterator: Iterator[rekcurd_pb2.EvaluateModelRequest],
                       context: ServicerContext
-                      ) -> drucker_pb2.EvaluateModelResponse:
+                      ) -> rekcurd_pb2.EvaluateModelResponse:
         """ Evaluate your ML model and save result.
         """
         first_req = next(request_iterator)
@@ -188,7 +188,7 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
             raise Exception(f'Error: Invalid evaluation result file path specified -> {result_path}')
 
         result, details = self.app.evaluate(self.app.get_eval_path(data_path))
-        metrics = drucker_pb2.EvaluationMetrics(num=result.num,
+        metrics = rekcurd_pb2.EvaluationMetrics(num=result.num,
                                                 accuracy=result.accuracy,
                                                 precision=result.precision,
                                                 recall=result.recall,
@@ -202,13 +202,13 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
         with open(eval_result_path + self.EVALUATE_DETAIL, 'wb') as f:
             pickle.dump(details, f)
 
-        return drucker_pb2.EvaluateModelResponse(metrics=metrics)
+        return rekcurd_pb2.EvaluateModelResponse(metrics=metrics)
 
-    @error_handling(drucker_pb2.UploadEvaluationDataResponse(status=0, message='Error: Uploading evaluation data.'))
+    @error_handling(rekcurd_pb2.UploadEvaluationDataResponse(status=0, message='Error: Uploading evaluation data.'))
     def UploadEvaluationData(self,
-                             request_iterator: Iterator[drucker_pb2.UploadEvaluationDataRequest],
+                             request_iterator: Iterator[rekcurd_pb2.UploadEvaluationDataRequest],
                              context: ServicerContext
-                             ) -> drucker_pb2.UploadEvaluationDataResponse:
+                             ) -> rekcurd_pb2.UploadEvaluationDataResponse:
         """ Save evaluation data
         """
         first_req = next(request_iterator)
@@ -222,14 +222,14 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
         with open(eval_path, 'wb') as f:
             f.write(eval_data)
 
-        return drucker_pb2.UploadEvaluationDataResponse(status=1,
+        return rekcurd_pb2.UploadEvaluationDataResponse(status=1,
                                                         message='Success: Uploading evaluation data.')
 
-    @error_handling(drucker_pb2.EvaluationResultResponse())
+    @error_handling(rekcurd_pb2.EvaluationResultResponse())
     def EvaluationResult(self,
-                         request: drucker_pb2.EvaluationResultRequest,
+                         request: rekcurd_pb2.EvaluationResultRequest,
                          context: ServicerContext
-                         ) -> Iterator[drucker_pb2.EvaluationResultResponse]:
+                         ) -> Iterator[rekcurd_pb2.EvaluationResultResponse]:
         """ Return saved evaluation result
         """
         data_path = request.data_path
@@ -244,7 +244,7 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
             result_details = pickle.load(f)
         with open(eval_result_path + self.EVALUATE_RESULT, 'rb') as f:
             result = pickle.load(f)
-        metrics = drucker_pb2.EvaluationMetrics(num=result.num,
+        metrics = rekcurd_pb2.EvaluationMetrics(num=result.num,
                                                 accuracy=result.accuracy,
                                                 precision=result.precision,
                                                 recall=result.recall,
@@ -255,7 +255,7 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
         detail_chunk = []
         metrics_size = sys.getsizeof(metrics)
         for detail in self.app.get_evaluate_detail(self.app.get_eval_path(data_path), result_details):
-            detail_chunk.append(drucker_pb2.EvaluationResultResponse.Detail(
+            detail_chunk.append(rekcurd_pb2.EvaluationResultResponse.Detail(
                 input=self.get_io_by_type(detail.input),
                 label=self.get_io_by_type(detail.label),
                 output=self.get_io_by_type(detail.result.result.label),
@@ -266,28 +266,28 @@ class DruckerDashboardServicer(drucker_pb2_grpc.DruckerDashboardServicer):
                 if metrics_size + sys.getsizeof(detail_chunk + detail_chunks) < self.BYTE_LIMIT:
                     detail_chunks.extend(detail_chunk)
                 else:
-                    yield drucker_pb2.EvaluationResultResponse(metrics=metrics, detail=detail_chunks)
+                    yield rekcurd_pb2.EvaluationResultResponse(metrics=metrics, detail=detail_chunks)
                     detail_chunks = detail_chunk
                 detail_chunk = []
 
         if len(detail_chunks + detail_chunk) > 0:
             if metrics_size + sys.getsizeof(detail_chunk + detail_chunks) < self.BYTE_LIMIT:
                 detail_chunks.extend(detail_chunk)
-                yield drucker_pb2.EvaluationResultResponse(metrics=metrics, detail=detail_chunks)
+                yield rekcurd_pb2.EvaluationResultResponse(metrics=metrics, detail=detail_chunks)
             else:
-                yield drucker_pb2.EvaluationResultResponse(metrics=metrics, detail=detail_chunks)
-                yield drucker_pb2.EvaluationResultResponse(metrics=metrics, detail=detail_chunk)
+                yield rekcurd_pb2.EvaluationResultResponse(metrics=metrics, detail=detail_chunks)
+                yield rekcurd_pb2.EvaluationResultResponse(metrics=metrics, detail=detail_chunk)
 
-    def get_io_by_type(self, io: Union[PredictInput, PredictLabel]) -> drucker_pb2.IO:
+    def get_io_by_type(self, io: Union[PredictInput, PredictLabel]) -> rekcurd_pb2.IO:
         if not isinstance(io, list):
             io = [io]
 
         if len(io) == 0:
-            return drucker_pb2.IO(tensor=drucker_pb2.Tensor())
+            return rekcurd_pb2.IO(tensor=rekcurd_pb2.Tensor())
         if isinstance(io[0], str):
-            return drucker_pb2.IO(str=drucker_pb2.ArrString(val=io))
+            return rekcurd_pb2.IO(str=rekcurd_pb2.ArrString(val=io))
         else:
-            return drucker_pb2.IO(tensor=drucker_pb2.Tensor(shape=[1], val=io))
+            return rekcurd_pb2.IO(tensor=rekcurd_pb2.Tensor(shape=[1], val=io))
 
     def get_score_by_type(self, score: PredictScore) -> List[float]:
         if isinstance(score, list):

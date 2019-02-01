@@ -8,7 +8,7 @@ from socket import gethostname
 
 from pythonjsonlogger import jsonlogger
 
-from drucker.utils import DruckerConfig
+from rekcurd.utils import RekcurdConfig
 from .logger_interface import SystemLoggerInterface, ServiceLoggerInterface
 
 
@@ -29,16 +29,16 @@ class JsonSystemLogger(SystemLoggerInterface):
             super().add_fields(log_record, record, message_dict)
             log_record['host'] = gethostname()
             log_record['timestamp'] = int(time.time() * 1000) / 1000
-            log_record['service'] = 'drucker'
+            log_record['service'] = 'rekcurd'
 
-    def __init__(self, config: DruckerConfig = None) -> None:
+    def __init__(self, config: RekcurdConfig = None) -> None:
         """
         Constructor
         :param config:
         """
         super().__init__()
         self.config = config
-        logger_name = 'drucker'
+        logger_name = 'rekcurd'
         log_level = logging.NOTSET
         app_name = 'NONE'
         app_env = 'NONE'
@@ -54,7 +54,7 @@ class JsonSystemLogger(SystemLoggerInterface):
         if config is not None:
             self.init_app(config)
 
-    def init_app(self, config: DruckerConfig):
+    def init_app(self, config: RekcurdConfig):
         self.config = config
         self.ml_service = config.APPLICATION_NAME
         self.service_level = config.SERVICE_LEVEL_ENUM.value
@@ -125,9 +125,9 @@ class JsonServiceLogger(ServiceLoggerInterface):
             super().add_fields(log_record, record, message_dict)
             log_record['host'] = gethostname()
             log_record['timestamp'] = int(time.time() * 1000) / 1000
-            log_record['service'] = 'drucker'
+            log_record['service'] = 'rekcurd'
 
-    def __init__(self, config: DruckerConfig = None):
+    def __init__(self, config: RekcurdConfig = None):
         """
         Constructor
         :param config:
@@ -137,7 +137,7 @@ class JsonServiceLogger(ServiceLoggerInterface):
         app_name = 'NONE'
         app_env = 'NONE'
 
-        self.log = logging.getLogger("drucker.service")
+        self.log = logging.getLogger("rekcurd.service")
         handler = logging.StreamHandler()
         formatter = self.JsonFormatter()
         handler.setFormatter(formatter)
@@ -148,7 +148,7 @@ class JsonServiceLogger(ServiceLoggerInterface):
         if config is not None:
             self.init_app(config)
 
-    def init_app(self, config: DruckerConfig):
+    def init_app(self, config: RekcurdConfig):
         self.config = config
         self.ml_service = config.APPLICATION_NAME
         self.service_level = config.SERVICE_LEVEL_ENUM.value

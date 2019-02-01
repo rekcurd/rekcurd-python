@@ -14,29 +14,29 @@ PredictLabel = Union[str, bytes, List[str], List[int], List[float]]
 PredictScore = Union[float, List[float]]
 
 
-class DruckerConfig:
+class RekcurdConfig:
     def __init__(self, config_file: str):
-        settings_yaml = os.getenv("DRUCKER_SETTINGS_YAML", config_file)
+        settings_yaml = os.getenv("REKCURD_SETTINGS_YAML", config_file)
         config = dict()
         if settings_yaml is not None:
             with open(settings_yaml, 'r') as f:
                 config = yaml.load(f)
-        self.TEST_MODE = str(os.getenv("DRUCKER_TEST_MODE", config.get("test", "False"))).lower() == 'true'
-        self.SERVICE_PORT = os.getenv("DRUCKER_SERVICE_PORT", config.get("app.port", "5000"))
-        self.APPLICATION_NAME = os.getenv("DRUCKER_APPLICATION_NAME", config["app.name"])
-        self.SERVICE_NAME = os.getenv("DRUCKER_SERVICE_NAME", config["app.service.name"])
-        service_level = os.getenv("DRUCKER_SERVICE_LEVEL", config["app.service.level"])
+        self.TEST_MODE = str(os.getenv("REKCURD_TEST_MODE", config.get("test", "False"))).lower() == 'true'
+        self.SERVICE_PORT = os.getenv("REKCURD_SERVICE_PORT", config.get("app.port", "5000"))
+        self.APPLICATION_NAME = os.getenv("REKCURD_APPLICATION_NAME", config["app.name"])
+        self.SERVICE_NAME = os.getenv("REKCURD_SERVICE_NAME", config["app.service.name"])
+        service_level = os.getenv("REKCURD_SERVICE_LEVEL", config["app.service.level"])
         self.SERVICE_LEVEL_ENUM = ServiceEnvType.to_Enum(service_level)
-        self.SERVICE_INFRA = os.getenv("DRUCKER_SERVICE_INFRA", "default")
-        self.DIR_MODEL = os.getenv("DRUCKER_SERVICE_MODEL_DIR", config.get("app.modeldir", "./model"))
-        self.DIR_EVAL = os.getenv("DRUCKER_SERVICE_EVAL_DIR", config.get("app.evaldir", "./eval"))
-        self.FILE_MODEL = os.getenv("DRUCKER_SERVICE_MODEL_FILE", config.get("app.modelfile", "default.model"))
-        self.DB_MODE = os.getenv('DRUCKER_DB_MODE', config.get('use.db', "sqlite"))
-        self.DB_MYSQL_HOST = os.getenv('DRUCKER_DB_MYSQL_HOST', config.get('db.mysql.host', ""))
-        self.DB_MYSQL_PORT = os.getenv('DRUCKER_DB_MYSQL_PORT', config.get('db.mysql.port', ""))
-        self.DB_MYSQL_DBNAME = os.getenv('DRUCKER_DB_MYSQL_DBNAME', config.get('db.mysql.dbname', ""))
-        self.DB_MYSQL_USER = os.getenv('DRUCKER_DB_MYSQL_USER', config.get('db.mysql.user', ""))
-        self.DB_MYSQL_PASSWORD = os.getenv('DRUCKER_DB_MYSQL_PASSWORD', config.get('db.mysql.password', ""))
+        self.SERVICE_INFRA = os.getenv("REKCURD_SERVICE_INFRA", "default")
+        self.DIR_MODEL = os.getenv("REKCURD_SERVICE_MODEL_DIR", config.get("app.modeldir", "./model"))
+        self.DIR_EVAL = os.getenv("REKCURD_SERVICE_EVAL_DIR", config.get("app.evaldir", "./eval"))
+        self.FILE_MODEL = os.getenv("REKCURD_SERVICE_MODEL_FILE", config.get("app.modelfile", "default.model"))
+        self.DB_MODE = os.getenv('REKCURD_DB_MODE', config.get('use.db', "sqlite"))
+        self.DB_MYSQL_HOST = os.getenv('REKCURD_DB_MYSQL_HOST', config.get('db.mysql.host', ""))
+        self.DB_MYSQL_PORT = os.getenv('REKCURD_DB_MYSQL_PORT', config.get('db.mysql.port', ""))
+        self.DB_MYSQL_DBNAME = os.getenv('REKCURD_DB_MYSQL_DBNAME', config.get('db.mysql.dbname', ""))
+        self.DB_MYSQL_USER = os.getenv('REKCURD_DB_MYSQL_USER', config.get('db.mysql.user', ""))
+        self.DB_MYSQL_PASSWORD = os.getenv('REKCURD_DB_MYSQL_PASSWORD', config.get('db.mysql.password', ""))
 
 
 class ServiceEnvType(Enum):
