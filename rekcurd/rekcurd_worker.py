@@ -7,7 +7,7 @@ from enum import Enum
 from typing import List, Tuple, Generator
 from sqlalchemy.sql import exists
 
-from .utils import RekcurdConfig, PredictLabel, PredictResult, EvaluateResult, EvaluateDetail, EvaluateResultDetail
+from .utils import RekcurdConfig, PredictInput, PredictResult, EvaluateResult, EvaluateDetail, EvaluateResultDetail
 from .logger import logger
 from .models import db, ModelAssignment
 
@@ -77,7 +77,7 @@ class Rekcurd(metaclass=ABCMeta):
         raise NotImplemented()
 
     @abstractmethod
-    def predict(self, input: PredictLabel, option: dict = None) -> PredictResult:
+    def predict(self, input: PredictInput, option: dict = None) -> PredictResult:
         raise NotImplemented()
 
     @abstractmethod
