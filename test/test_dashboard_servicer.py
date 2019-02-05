@@ -6,22 +6,22 @@ from unittest.mock import patch, Mock, mock_open
 import grpc_testing
 from grpc import StatusCode
 
-from drucker.protobuf import drucker_pb2
-from drucker.drucker_dashboard_servicer import DruckerDashboardServicer
-from drucker.utils import EvaluateResult, EvaluateResultDetail, PredictResult, EvaluateDetail
+from rekcurd.protobuf import rekcurd_pb2
+from rekcurd.rekcurd_dashboard_servicer import RekcurdDashboardServicer
+from rekcurd.utils import EvaluateResult, EvaluateResultDetail, PredictResult, EvaluateDetail
 from . import app, system_logger
 
 
-target_service = drucker_pb2.DESCRIPTOR.services_by_name['DruckerDashboard']
+target_service = rekcurd_pb2.DESCRIPTOR.services_by_name['RekcurdDashboard']
 eval_result = EvaluateResult(1, 0.8, [0.7], [0.6], [0.5], {'dummy': 0.4})
 eval_result_details = [EvaluateResultDetail(PredictResult('pre_label', 0.9), False)]
 eval_detail = EvaluateDetail('input', 'label', eval_result_details[0])
 
 # Overwrite CHUNK_SIZE and BYTE_LIMIT to smaller values for testing
 chunk_size = 3
-DruckerDashboardServicer.CHUNK_SIZE = chunk_size
+RekcurdDashboardServicer.CHUNK_SIZE = chunk_size
 # response byte size will be greater than BYTE_LIMIT in 2nd loop
-DruckerDashboardServicer.BYTE_LIMIT = 190
+RekcurdDashboardServicer.BYTE_LIMIT = 190
 
 
 def patch_predictor():
@@ -31,15 +31,15 @@ def patch_predictor():
     def test_method(func):
         @wraps(func)
         def inner_method(*args, **kwargs):
-            with patch('drucker.drucker_dashboard_servicer.uuid.uuid4',
+            with patch('rekcurd.rekcurd_dashboard_servicer.uuid.uuid4',
                 new=Mock(return_value=Mock(hex='my_uuid'))) as _, \
-                    patch('drucker.drucker_dashboard_servicer.shutil.move',
+                    patch('rekcurd.rekcurd_dashboard_servicer.shutil.move',
                         new=Mock(return_value=True)) as _, \
-                    patch('drucker.drucker_dashboard_servicer.Path',
+                    patch('rekcurd.rekcurd_dashboard_servicer.Path',
                         new=Mock(return_value=Mock())) as mock_path, \
-                    patch('drucker.drucker_dashboard_servicer.pickle',
+                    patch('rekcurd.rekcurd_dashboard_servicer.pickle',
                           new=Mock()) as _, \
-                    patch('drucker.drucker_dashboard_servicer.pickle.load',
+                    patch('rekcurd.rekcurd_dashboard_servicer.pickle.load',
                           new=Mock(return_value=eval_result)) as _, \
                     patch('builtins.open', new_callable=mock_open) as _:
                 mock_path.return_value.name = 'my_path'
@@ -48,8 +48,8 @@ def patch_predictor():
     return test_method
 
 
-class DruckerWorkerServicerTest(unittest.TestCase):
-    """Tests for DruckerDashboardServicer.
+class RekcurdWorkerServicerTest(unittest.TestCase):
+    """Tests for RekcurdDashboardServicer.
     """
 
     def setUp(self):
@@ -59,7 +59,7 @@ class DruckerWorkerServicerTest(unittest.TestCase):
         app.evaluate = Mock(return_value=(eval_result, eval_result_details))
         self._real_time = grpc_testing.strict_real_time()
         self._fake_time = grpc_testing.strict_fake_time(time.time())
-        servicer = DruckerDashboardServicer(logger=system_logger, app=app)
+        servicer = RekcurdDashboardServicer(logger=system_logger, app=app)
         descriptors_to_services = {
             target_service: servicer
         }
@@ -71,7 +71,7 @@ class DruckerWorkerServicerTest(unittest.TestCase):
     def test_ServiceInfo(self):
         rpc = self._real_time_server.invoke_unary_unary(
             target_service.methods_by_name['ServiceInfo'], (),
-            drucker_pb2.ServiceInfoRequest(), None)
+            rekcurd_pb2.ServiceInfoRequest(), None)
         response, trailing_metadata, code, details = rpc.termination()
         self.assertIs(code, StatusCode.OK)
         self.assertEqual(response.application_name, 'test')
@@ -80,7 +80,7 @@ class DruckerWorkerServicerTest(unittest.TestCase):
 
     @patch_predictor()
     def test_UploadModel(self):
-        request = drucker_pb2.UploadModelRequest(path='my_path', data=b'data')
+        request = rekcurd_pb2.UploadModelRequest(path='my_path', data=b'data')
         rpc = self._real_time_server.invoke_stream_unary(
             target_service.methods_by_name['UploadModel'], (), None)
         rpc.send_request(request)
@@ -93,7 +93,7 @@ class DruckerWorkerServicerTest(unittest.TestCase):
 
     @patch_predictor()
     def test_InvalidUploadModel(self):
-        request = drucker_pb2.UploadModelRequest(path='../../../my_path', data=b'data')
+        request = rekcurd_pb2.UploadModelRequest(path='../../../my_path', data=b'data')
         rpc = self._real_time_server.invoke_stream_unary(
             target_service.methods_by_name['UploadModel'], (), None)
         rpc.send_request(request)
@@ -108,7 +108,7 @@ class DruckerWorkerServicerTest(unittest.TestCase):
     def test_SwitchModel(self):
         rpc = self._real_time_server.invoke_unary_unary(
             target_service.methods_by_name['SwitchModel'], (),
-            drucker_pb2.SwitchModelRequest(path='my_path'), None)
+            rekcurd_pb2.SwitchModelRequest(path='my_path'), None)
         response, trailing_metadata, code, details = rpc.termination()
         self.assertIs(code, StatusCode.OK)
         self.assertEqual(response.status, 1)
@@ -117,14 +117,14 @@ class DruckerWorkerServicerTest(unittest.TestCase):
     def test_InvalidSwitchModel(self):
         rpc = self._real_time_server.invoke_unary_unary(
             target_service.methods_by_name['SwitchModel'], (),
-            drucker_pb2.SwitchModelRequest(path='../../my_path'), None)
+            rekcurd_pb2.SwitchModelRequest(path='../../my_path'), None)
         response, trailing_metadata, code, details = rpc.termination()
         self.assertIs(code, StatusCode.UNKNOWN)
         self.assertEqual(response.status, 0)
 
     @patch_predictor()
     def test_UploadEvaluationData(self):
-        request = drucker_pb2.UploadEvaluationDataRequest(data_path='my_path', data=b'data_')
+        request = rekcurd_pb2.UploadEvaluationDataRequest(data_path='my_path', data=b'data_')
         rpc = self._real_time_server.invoke_stream_unary(
             target_service.methods_by_name['UploadEvaluationData'], (), None)
         rpc.send_request(request)
@@ -136,7 +136,7 @@ class DruckerWorkerServicerTest(unittest.TestCase):
 
     @patch_predictor()
     def test_InvalidEvaluationData(self):
-        request = drucker_pb2.UploadEvaluationDataRequest(data_path='../../my_path', data=b'data_')
+        request = rekcurd_pb2.UploadEvaluationDataRequest(data_path='../../my_path', data=b'data_')
         rpc = self._real_time_server.invoke_stream_unary(
             target_service.methods_by_name['UploadEvaluationData'], (), None)
         rpc.send_request(request)
@@ -148,7 +148,7 @@ class DruckerWorkerServicerTest(unittest.TestCase):
 
     @patch_predictor()
     def test_EvalauteModel(self):
-        request = drucker_pb2.EvaluateModelRequest(data_path='my_path', result_path='my_path')
+        request = rekcurd_pb2.EvaluateModelRequest(data_path='my_path', result_path='my_path')
         rpc = self._real_time_server.invoke_stream_unary(
             target_service.methods_by_name['EvaluateModel'], (), None)
         rpc.send_request(request)
@@ -166,7 +166,7 @@ class DruckerWorkerServicerTest(unittest.TestCase):
 
     @patch_predictor()
     def test_InvalidEvalauteModel(self):
-        request = drucker_pb2.EvaluateModelRequest(data_path='../../my_path', result_path='my_res_path')
+        request = rekcurd_pb2.EvaluateModelRequest(data_path='../../my_path', result_path='my_res_path')
         rpc = self._real_time_server.invoke_stream_unary(
             target_service.methods_by_name['EvaluateModel'], (), None)
         rpc.send_request(request)
@@ -175,7 +175,7 @@ class DruckerWorkerServicerTest(unittest.TestCase):
         self.assertIs(code, StatusCode.UNKNOWN)
         self.assertEqual(response.metrics.num, 0)
 
-        request = drucker_pb2.EvaluateModelRequest(data_path='my_path', result_path='../my_res_path')
+        request = rekcurd_pb2.EvaluateModelRequest(data_path='my_path', result_path='../my_res_path')
         rpc = self._real_time_server.invoke_stream_unary(
             target_service.methods_by_name['EvaluateModel'], (), None)
         rpc.send_request(request)
@@ -188,7 +188,7 @@ class DruckerWorkerServicerTest(unittest.TestCase):
         app.get_evaluate_detail = Mock(return_value=iter(eval_detail for _ in range(size)))
         rpc = self._real_time_server.invoke_unary_stream(
             target_service.methods_by_name['EvaluationResult'], (),
-            drucker_pb2.EvaluationResultRequest(data_path='my_path', result_path='my_path'), None)
+            rekcurd_pb2.EvaluationResultRequest(data_path='my_path', result_path='my_path'), None)
         responses = [rpc.take_response() for _ in range(take_times)]
         return rpc, responses
 
@@ -237,14 +237,14 @@ class DruckerWorkerServicerTest(unittest.TestCase):
         rpc.termination()
 
     def test_get_io_by_type(self):
-        servicer = DruckerDashboardServicer(logger=system_logger, app=app)
+        servicer = RekcurdDashboardServicer(logger=system_logger, app=app)
         self.assertEqual(servicer.get_io_by_type('test').str.val, ['test'])
         self.assertEqual(servicer.get_io_by_type(['test', 'test2']).str.val, ['test', 'test2'])
         self.assertEqual(servicer.get_io_by_type(2).tensor.val, [2])
         self.assertEqual(servicer.get_io_by_type([2, 3]).tensor.val, [2, 3])
 
     def test_get_score_by_type(self):
-        servicer = DruckerDashboardServicer(logger=system_logger, app=app)
+        servicer = RekcurdDashboardServicer(logger=system_logger, app=app)
         score = 4.5
         self.assertEqual(servicer.get_score_by_type(score), [score])
         self.assertEqual(servicer.get_score_by_type([score]), [score])

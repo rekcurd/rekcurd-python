@@ -1,4 +1,4 @@
-# Copyright 2018 The Drucker Authors.
+# Copyright 2018 The Rekcurd Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,8 +17,8 @@ from setuptools import setup
 
 
 here = os.path.abspath(os.path.dirname(__file__))
-exec(open(os.path.join(here, 'drucker', '_project.py')).read())
-exec(open(os.path.join(here, 'drucker', '_version.py')).read())
+exec(open(os.path.join(here, 'rekcurd', '_project.py')).read())
+exec(open(os.path.join(here, 'rekcurd', '_version.py')).read())
 PACKAGE_NAME = __project__  # NOQA
 VERSION = __version__  # NOQA
 DEVELOPMENT_STATUS = "3 - Alpha"
@@ -54,15 +54,15 @@ setup(
     version=VERSION,
     description="A Python gRPC framework for serving a machine learning module written in Python.",
     author_email="",
-    author="Drucker",
+    author="Rekcurd",
     license="Apache License Version 2.0",
     url="https://github.com/rekcurd/rekcurd-python",
-    keywords=["Drucker", "Kubernetes"],
+    keywords=["Rekcurd", "Kubernetes"],
     install_requires=REQUIRES,
     tests_require=TESTS_REQUIRES,
     extras_require=EXTRAS,
-    packages=['drucker', 'drucker.logger', 'drucker.utils',
-              'drucker.models', 'drucker.protobuf'],
+    packages=['rekcurd', 'rekcurd.logger', 'rekcurd.utils',
+              'rekcurd.models', 'rekcurd.protobuf'],
     include_package_data=True,
     long_description=LONG_DESCRIPTION,
     classifiers=[

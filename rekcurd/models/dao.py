@@ -5,16 +5,16 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
 
-from drucker.utils import DruckerConfig
+from rekcurd.utils import RekcurdConfig
 
 
-class DruckerDAO(object):
+class RekcurdDAO(object):
     """ Data Access Object
 
     This implementation is inspired by Flask-SQLAlchemy's one.
     """
 
-    def __init__(self, config: DruckerConfig = None):
+    def __init__(self, config: RekcurdConfig = None):
         """
         Constructor
         :param config:
@@ -36,7 +36,7 @@ class DruckerDAO(object):
         if config is not None:
             self.init_app(config)
 
-    def init_app(self, config: DruckerConfig):
+    def init_app(self, config: RekcurdConfig):
         self.config = config
         self.engine = create_engine(
             self.__db_url(config),
@@ -51,7 +51,7 @@ class DruckerDAO(object):
             )
         )
 
-    def __db_url(self, config: DruckerConfig):
+    def __db_url(self, config: RekcurdConfig):
         """ Get full URL for DB
 
         :TODO: Make configuarable of template of URL and encoding
@@ -59,7 +59,7 @@ class DruckerDAO(object):
         :TODO: Use an appropriate "Exception"
         """
         if config.DB_MODE == "sqlite":
-            db_name = "drucker.test.sqlite3" if config.TEST_MODE else "drucker.sqlite3"
+            db_name = "rekcurd.test.sqlite3" if config.TEST_MODE else "rekcurd.sqlite3"
             url = f'sqlite:///{db_name}'
         elif config.DB_MODE == "mysql":
             host = config.DB_MYSQL_HOST
@@ -73,4 +73,4 @@ class DruckerDAO(object):
         return url
 
 
-db = DruckerDAO()
+db = RekcurdDAO()

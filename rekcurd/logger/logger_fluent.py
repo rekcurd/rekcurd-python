@@ -8,20 +8,20 @@ from socket import gethostname
 
 from fluent import handler, sender
 
-from drucker.utils import DruckerConfig
+from rekcurd.utils import RekcurdConfig
 from .logger_interface import SystemLoggerInterface, ServiceLoggerInterface
 
 
 class FluentSystemLogger(SystemLoggerInterface):
 
-    def __init__(self, config: DruckerConfig = None) -> None:
+    def __init__(self, config: RekcurdConfig = None) -> None:
         """
         Constructor
         :param config:
         """
         super().__init__()
         self.config = config
-        logger_name = 'drucker'
+        logger_name = 'rekcurd'
         log_level = logging.NOTSET
         app_name = 'NONE'
         app_env = 'NONE'
@@ -31,7 +31,7 @@ class FluentSystemLogger(SystemLoggerInterface):
         if config is not None:
             self.init_app(config)
 
-    def init_app(self, config: DruckerConfig):
+    def init_app(self, config: RekcurdConfig):
         self.config = config
         app_name = config.APPLICATION_NAME
         app_env = config.SERVICE_LEVEL_ENUM.value
@@ -44,11 +44,11 @@ class FluentSystemLogger(SystemLoggerInterface):
             'short_message': '%(message)s',
             'timestamp': '%(created)d.%(msecs)d',
             'level': '%(loglevel)d',
-            'service': 'drucker',
+            'service': 'rekcurd',
             'ml_service': app_name,
             'service_level': app_env
         }
-        fluent_handler = handler.FluentHandler('drucker')
+        fluent_handler = handler.FluentHandler('rekcurd')
         formatter = handler.FluentRecordFormatter(custom_format)
         fluent_handler.setFormatter(formatter)
         fluent_handler.setLevel(log_level)
@@ -92,7 +92,7 @@ class FluentSystemLogger(SystemLoggerInterface):
 
 class FluentServiceLogger(ServiceLoggerInterface):
 
-    def __init__(self, config: DruckerConfig = None):
+    def __init__(self, config: RekcurdConfig = None):
         """
         Constructor
         :param config:
@@ -101,13 +101,13 @@ class FluentServiceLogger(ServiceLoggerInterface):
         self.config = config
         app_name = 'NONE'
         app_env = 'NONE'
-        self.logger = sender.FluentSender('drucker_service')
+        self.logger = sender.FluentSender('rekcurd_service')
         self.ml_service = app_name
         self.service_level = app_env
         if config is not None:
             self.init_app(config)
 
-    def init_app(self, config: DruckerConfig):
+    def init_app(self, config: RekcurdConfig):
         self.config = config
         self.ml_service = config.APPLICATION_NAME
         self.service_level = config.SERVICE_LEVEL_ENUM.value
@@ -133,7 +133,7 @@ class FluentServiceLogger(ServiceLoggerInterface):
                 'short_message': 'prediction result.',
                 'timestamp': int(time.time() * 1000) / 1000,
                 'level': logging.INFO,
-                'service': 'drucker',
+                'service': 'rekcurd',
                 'ml_service': self.ml_service,
                 'service_level': self.service_level,
                 'ml_input': ml_input,

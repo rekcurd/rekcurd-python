@@ -3,11 +3,11 @@
 
 from typing import List, Tuple, Generator
 
-from drucker import Drucker
-from drucker.utils import PredictLabel, PredictResult, EvaluateResult, EvaluateDetail, EvaluateResultDetail
+from rekcurd import Rekcurd
+from rekcurd.utils import PredictLabel, PredictResult, EvaluateResult, EvaluateDetail, EvaluateResultDetail
 
 
-class DummyApp(Drucker):
+class DummyApp(Rekcurd):
     def __init__(self, config_file: str = None):
         super().__init__(config_file)
 

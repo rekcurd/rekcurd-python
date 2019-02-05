@@ -7,12 +7,12 @@ from enum import Enum
 from typing import List, Tuple, Generator
 from sqlalchemy.sql import exists
 
-from .utils import DruckerConfig, PredictLabel, PredictResult, EvaluateResult, EvaluateDetail, EvaluateResultDetail
+from .utils import RekcurdConfig, PredictLabel, PredictResult, EvaluateResult, EvaluateDetail, EvaluateResultDetail
 from .logger import logger
 from .models import db, ModelAssignment
 
 
-class Drucker(metaclass=ABCMeta):
+class Rekcurd(metaclass=ABCMeta):
     __type_input = None
     __type_output = None
     config = None
@@ -22,7 +22,7 @@ class Drucker(metaclass=ABCMeta):
     model_path = None
 
     def __init__(self, config_file: str = None):
-        self.config = DruckerConfig(config_file)
+        self.config = RekcurdConfig(config_file)
         self.logger = logger
         self.db = db
         self.logger.init_app(self.config)
