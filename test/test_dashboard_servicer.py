@@ -1,5 +1,4 @@
 import unittest
-import sys
 import time
 from functools import wraps
 from unittest.mock import patch, Mock, mock_open
@@ -13,7 +12,7 @@ from . import app, system_logger
 
 
 target_service = rekcurd_pb2.DESCRIPTOR.services_by_name['RekcurdDashboard']
-eval_result = EvaluateResult(1, 0.8, [0.7], [0.6], [0.5], {'dummy': 0.4})
+eval_result = EvaluateResult(1, 0.8, [0.7], [0.6], [0.5], {'dummy': 0.4}, ['label1'])
 eval_result_details = [EvaluateResultDetail(PredictResult('pre_label', 0.9), False)]
 eval_detail = EvaluateDetail('input', 'label', eval_result_details[0])
 
@@ -147,7 +146,7 @@ class RekcurdWorkerServicerTest(unittest.TestCase):
         self.assertEqual(response.status, 0)
 
     @patch_predictor()
-    def test_EvalauteModel(self):
+    def test_EvaluateModel(self):
         request = rekcurd_pb2.EvaluateModelRequest(data_path='my_path', result_path='my_path')
         rpc = self._real_time_server.invoke_stream_unary(
             target_service.methods_by_name['EvaluateModel'], (), None)
@@ -163,6 +162,7 @@ class RekcurdWorkerServicerTest(unittest.TestCase):
         self.assertEqual([round(r, 3) for r in response.metrics.recall], eval_result.recall)
         self.assertEqual([round(f, 3) for f in response.metrics.fvalue], eval_result.fvalue)
         self.assertEqual(round(response.metrics.option['dummy'], 3), eval_result.option['dummy'])
+        self.assertEqual([l.str.val[0] for l in response.metrics.label], eval_result.label)
 
     @patch_predictor()
     def test_InvalidEvalauteModel(self):
@@ -203,6 +203,7 @@ class RekcurdWorkerServicerTest(unittest.TestCase):
         self.assertEqual([round(r, 3) for r in response.metrics.recall], eval_result.recall)
         self.assertEqual([round(f, 3) for f in response.metrics.fvalue], eval_result.fvalue)
         self.assertEqual(round(response.metrics.option['dummy'], 3), eval_result.option['dummy'])
+        self.assertEqual([l.str.val[0] for l in response.metrics.label], eval_result.label)
 
         self.assertEqual(len(response.detail), 1)
         detail = response.detail[0]

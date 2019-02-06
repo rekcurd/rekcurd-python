@@ -188,12 +188,14 @@ class RekcurdDashboardServicer(rekcurd_pb2_grpc.RekcurdDashboardServicer):
             raise Exception(f'Error: Invalid evaluation result file path specified -> {result_path}')
 
         result, details = self.app.evaluate(self.app.get_eval_path(data_path))
+        label_ios = [self.get_io_by_type(l) for l in result.label]
         metrics = rekcurd_pb2.EvaluationMetrics(num=result.num,
                                                 accuracy=result.accuracy,
                                                 precision=result.precision,
                                                 recall=result.recall,
                                                 fvalue=result.fvalue,
-                                                option=result.option)
+                                                option=result.option,
+                                                label=label_ios)
 
         eval_result_path = self.app.get_eval_path(result_path)
         Path(eval_result_path).parent.mkdir(parents=True, exist_ok=True)
@@ -244,12 +246,14 @@ class RekcurdDashboardServicer(rekcurd_pb2_grpc.RekcurdDashboardServicer):
             result_details = pickle.load(f)
         with open(eval_result_path + self.EVALUATE_RESULT, 'rb') as f:
             result = pickle.load(f)
+        label_ios = [self.get_io_by_type(l) for l in result.label]
         metrics = rekcurd_pb2.EvaluationMetrics(num=result.num,
                                                 accuracy=result.accuracy,
                                                 precision=result.precision,
                                                 recall=result.recall,
                                                 fvalue=result.fvalue,
-                                                option=result.option)
+                                                option=result.option,
+                                                label=label_ios)
 
         detail_chunks = []
         detail_chunk = []
