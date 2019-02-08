@@ -17,8 +17,8 @@ class DummyApp(Rekcurd):
     def predict(self, input: PredictLabel, option: dict = None) -> PredictResult:
         pass
 
-    def evaluate(self, file_path: str) -> Tuple[EvaluateResult, List[EvaluateResultDetail]]:
+    def evaluate(self, filepath: str) -> Tuple[EvaluateResult, List[EvaluateResultDetail]]:
         pass
 
-    def get_evaluate_detail(self, file_path: str, results: List[EvaluateResultDetail]) -> Generator[EvaluateDetail, None, None]:
+    def get_evaluate_detail(self, filepath: str, results: List[EvaluateResultDetail]) -> Generator[EvaluateDetail, None, None]:
         pass
