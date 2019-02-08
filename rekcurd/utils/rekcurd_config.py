@@ -16,15 +16,18 @@ class RekcurdConfig:
             self.__load_from_env()
 
     def __load_from_file(self, config_file: str):
-        with open(config_file, 'r') as f:
-            config = yaml.load(f)
+        if config_file is not None:
+            with open(config_file, 'r') as f:
+                config = yaml.load(f)
+        else:
+            config = dict()
         self.TEST_MODE = config.get("test", True)
-        config_app = config.get("app")
-        self.APPLICATION_NAME = config_app.get("name")
+        config_app = config.get("app", dict())
+        self.APPLICATION_NAME = config_app.get("name", "sample")
         self.SERVICE_NAME = self.APPLICATION_NAME
         self.SERVICE_PORT = config_app.get("port", 5000)
         self.SERVICE_LEVEL = config_app.get("service_level", "development")
-        config_model = config.get("model")
+        config_model = config.get("model", dict())
         model_mode = config_model.get("mode", "local")
         self.MODEL_MODE_ENUM = ModelModeEnum.to_Enum(model_mode)
         self.MODEL_FILE_PATH = config_model.get("filepath", "./model/default.model")

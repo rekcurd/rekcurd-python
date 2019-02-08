@@ -46,7 +46,7 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
 
         single_output = self.app.get_type_output() in [self.Type.STRING, self.Type.BYTES]
         try:
-            result = self.app.predict(input, ioption)
+            result = self.app.rekcurd_functions[self.app.predict.__name__](self.app.predictor, input, ioption)
         except:
             if single_output:
                 if isinstance(response, rekcurd_pb2.StringOutput):

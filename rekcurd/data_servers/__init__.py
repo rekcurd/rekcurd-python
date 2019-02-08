@@ -127,6 +127,3 @@ class DataServer(object):
 
     def upload_evaluation_result_detail(self, data: object, filepath: str) -> str:
         return self._upload_evaluation_result(data, filepath, self.__EVALUATE_DETAIL)
-
-
-data_server = DataServer()
