@@ -12,7 +12,7 @@ from . import app, system_logger
 
 
 target_service = rekcurd_pb2.DESCRIPTOR.services_by_name['RekcurdDashboard']
-eval_result = EvaluateResult(1, 0.8, [0.7], [0.6], [0.5], {'dummy': 0.4}, ['label1'])
+eval_result = EvaluateResult(1, 0.8, [0.7], [0.6], [0.5], ['label1'], {'dummy': 0.4})
 eval_result_details = [EvaluateResultDetail(PredictResult('pre_label', 0.9), False)]
 eval_detail = EvaluateDetail('input', 'label', eval_result_details[0])
 

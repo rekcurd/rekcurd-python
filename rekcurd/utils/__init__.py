@@ -70,26 +70,16 @@ class PredictResult:
 
 
 class EvaluateResult:
-    def __init__(self, num: int = None, accuracy: float = None,
-                 precision: List[float] = None, recall: List[float] = None,
-                 fvalue: List[float] = None, option: Dict[str, float] = {},
-                 label: List[PredictLabel] = None):
-        if num is None:
-            self.num = 0
-            self.accuracy = 0.0
-            self.precision = [0.0]
-            self.recall = [0.0]
-            self.fvalue = [0.0]
-            self.option = {}
-            self.label = [0.0]
-        else:
-            self.num = num
-            self.accuracy = accuracy
-            self.precision = precision
-            self.recall = recall
-            self.fvalue = fvalue
-            self.option = option
-            self.label = label
+    def __init__(self, num: int, accuracy: float, precision: List[float],
+                 recall: List[float], fvalue: List[float], label: List[PredictLabel],
+                 option: Dict[str, float] = {}):
+        self.num = num
+        self.accuracy = accuracy
+        self.precision = precision
+        self.recall = recall
+        self.fvalue = fvalue
+        self.label = label
+        self.option = option
 
 
 class EvaluateResultDetail(NamedTuple):
