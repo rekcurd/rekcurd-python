@@ -57,7 +57,7 @@ class JsonSystemLogger(SystemLoggerInterface):
     def init_app(self, config: RekcurdConfig):
         self.config = config
         self.ml_service = config.APPLICATION_NAME
-        self.service_level = config.SERVICE_LEVEL_ENUM.value
+        self.service_level = config.SERVICE_LEVEL
 
     def exception(self, message: str) -> None:
         """
@@ -151,7 +151,7 @@ class JsonServiceLogger(ServiceLoggerInterface):
     def init_app(self, config: RekcurdConfig):
         self.config = config
         self.ml_service = config.APPLICATION_NAME
-        self.service_level = config.SERVICE_LEVEL_ENUM.value
+        self.service_level = config.SERVICE_LEVEL
 
     def emit(self, request, response, suppress_log_inout: bool = False) -> None:
         """

@@ -6,4 +6,5 @@ from .logger_jsonlogger import JsonSystemLogger, JsonServiceLogger
 from .logger_fluent import FluentSystemLogger, FluentServiceLogger
 
 
-logger = JsonSystemLogger()
+system_logger = JsonSystemLogger()
+service_logger = JsonServiceLogger()

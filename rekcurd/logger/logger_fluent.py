@@ -34,7 +34,7 @@ class FluentSystemLogger(SystemLoggerInterface):
     def init_app(self, config: RekcurdConfig):
         self.config = config
         app_name = config.APPLICATION_NAME
-        app_env = config.SERVICE_LEVEL_ENUM.value
+        app_env = config.SERVICE_LEVEL
         log_level = logging.NOTSET
         self.log.addHandler(self.__init_fluent_handler(app_name, app_env, log_level))
 
@@ -110,7 +110,7 @@ class FluentServiceLogger(ServiceLoggerInterface):
     def init_app(self, config: RekcurdConfig):
         self.config = config
         self.ml_service = config.APPLICATION_NAME
-        self.service_level = config.SERVICE_LEVEL_ENUM.value
+        self.service_level = config.SERVICE_LEVEL
 
     def emit(self, request, response, suppress_log_inout: bool = False) -> None:
         """

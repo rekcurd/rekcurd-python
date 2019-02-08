@@ -8,7 +8,6 @@ from enum import Enum
 from grpc import ServicerContext
 from typing import Iterator, Union
 
-from .logger import ServiceLoggerInterface
 from .rekcurd_worker import PredictResult, Rekcurd
 from .protobuf import rekcurd_pb2, rekcurd_pb2_grpc
 
@@ -29,9 +28,9 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
         ARRAY_FLOAT = 4
         ARRAY_STRING = 5
 
-    def __init__(self, logger: ServiceLoggerInterface, app: Rekcurd):
-        self.logger = logger
+    def __init__(self, app: Rekcurd):
         self.app = app
+        self.logger = app.service_logger
 
     def Process(self,
                 request: RekcurdInput,
