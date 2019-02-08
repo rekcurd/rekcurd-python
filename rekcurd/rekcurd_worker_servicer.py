@@ -8,7 +8,8 @@ from enum import Enum
 from grpc import ServicerContext
 from typing import Iterator, Union
 
-from .rekcurd_worker import PredictResult, Rekcurd
+from .rekcurd_worker import Rekcurd
+from .utils import PredictResult
 from .protobuf import rekcurd_pb2, rekcurd_pb2_grpc
 
 
