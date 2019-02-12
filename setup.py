@@ -62,7 +62,7 @@ setup(
     tests_require=TESTS_REQUIRES,
     extras_require=EXTRAS,
     packages=['rekcurd', 'rekcurd.logger', 'rekcurd.utils',
-              'rekcurd.models', 'rekcurd.protobuf'],
+              'rekcurd.data_servers', 'rekcurd.protobuf'],
     include_package_data=True,
     long_description=LONG_DESCRIPTION,
     classifiers=[
