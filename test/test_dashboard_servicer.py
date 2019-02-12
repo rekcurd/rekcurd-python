@@ -32,7 +32,15 @@ def patch_predictor():
     def test_method(func):
         @wraps(func)
         def inner_method(*args, **kwargs):
-            with patch('rekcurd.rekcurd_dashboard_servicer.pickle',
+            with patch('rekcurd.data_servers.LocalHandler.download',
+                       new=Mock(return_value=True)) as _, \
+                    patch('rekcurd.data_servers.LocalHandler.upload',
+                          new=Mock(return_value=True)) as _, \
+                    patch('rekcurd.data_servers.CephHandler.download',
+                          new=Mock(return_value=True)) as _, \
+                    patch('rekcurd.data_servers.CephHandler.upload',
+                          new=Mock(return_value=True)) as _, \
+                    patch('rekcurd.rekcurd_dashboard_servicer.pickle',
                           new=Mock()) as _, \
                     patch('rekcurd.rekcurd_dashboard_servicer.pickle.load',
                           new=Mock(return_value=eval_result)) as _, \
@@ -51,8 +59,6 @@ class RekcurdWorkerServicerTest(unittest.TestCase):
         app.data_server = DataServer(app.config)
         app.system_logger = JsonSystemLogger(config=app.config)
         app.service_logger = JsonServiceLogger(config=app.config)
-        #app.data_server.get_model_path = Mock(return_value='test/my_path')
-        #app.data_server.get_evaluation_data_path = Mock(return_value='test/my_eval_path')
         app.evaluate = Mock(return_value=(eval_result, eval_result_details))
         self._real_time = grpc_testing.strict_real_time()
         self._fake_time = grpc_testing.strict_fake_time(time.time())
