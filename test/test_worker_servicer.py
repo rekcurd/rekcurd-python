@@ -1,4 +1,4 @@
-from . import *
+from . import app, Type
 
 import unittest
 import time
@@ -8,6 +8,9 @@ import grpc_testing
 from grpc import StatusCode
 
 from rekcurd.protobuf import rekcurd_pb2
+from rekcurd.rekcurd_worker_servicer import RekcurdWorkerServicer
+from rekcurd.data_servers import DataServer
+from rekcurd.logger import JsonSystemLogger, JsonServiceLogger
 from rekcurd.utils import PredictResult
 
 
@@ -91,9 +94,13 @@ class RekcurdWorkerServicerTest(unittest.TestCase):
         self.assertIsInstance(response, rekcurd_pb2.ArrStringOutput)
 
     def setUp(self):
+        app.load_config_file("./test/test-settings.yml")
+        app.data_server = DataServer(app.config)
+        app.system_logger = JsonSystemLogger(config=app.config)
+        app.service_logger = JsonServiceLogger(config=app.config)
         self._real_time = grpc_testing.strict_real_time()
         self._fake_time = grpc_testing.strict_fake_time(time.time())
-        servicer = rekcurd.rekcurd_worker_servicer.RekcurdWorkerServicer(logger=service_logger, app=app)
+        servicer = RekcurdWorkerServicer(app=app)
         descriptors_to_services = {
             target_service: servicer
         }
