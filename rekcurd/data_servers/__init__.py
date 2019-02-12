@@ -86,7 +86,7 @@ class DataServer(object):
 
         local_filepath = Path(self._api_handler.LOCAL_EVAL_DIR, valid_path.name+suffix)
         if not local_filepath.exists():
-            local_filepath.mkdir(parents=True, exist_ok=True)
+            local_filepath.parent.mkdir(parents=True, exist_ok=True)
             self._api_handler.download(filepath+suffix, str(local_filepath))
         return str(local_filepath)
 
