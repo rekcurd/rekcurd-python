@@ -22,13 +22,8 @@ class DataServer(object):
     __EVALUATE_RESULT = '_eval_res.pkl'
     __EVALUATE_DETAIL = '_eval_detail.pkl'
 
-    def __init__(self, config: RekcurdConfig = None):
-        self._api_handler: DataHandler = None
-        self.config: RekcurdConfig = config
-        if config is not None:
-            self.init_app(config)
-
-    def init_app(self, config: RekcurdConfig):
+    def __init__(self, config: RekcurdConfig):
+        self.config = config
         if config.MODEL_MODE_ENUM == ModelModeEnum.LOCAL:
             self._api_handler = LocalHandler(config)
         elif config.MODEL_MODE_ENUM == ModelModeEnum.CEPH_S3:

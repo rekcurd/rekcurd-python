@@ -31,33 +31,27 @@ class JsonSystemLogger(SystemLoggerInterface):
             log_record['timestamp'] = int(time.time() * 1000) / 1000
             log_record['service'] = 'rekcurd'
 
-    def __init__(self, config: RekcurdConfig = None) -> None:
+    def __init__(self,
+                 logger_name: str = 'rekcurd',
+                 log_level: int = None,
+                 config: RekcurdConfig = RekcurdConfig()) -> None:
         """
         Constructor
-        :param config:
+        :param logger_name:
+        :param log_level:
+        :param config: RekcurdConfig
         """
-        super().__init__()
         self.config = config
-        logger_name = 'rekcurd'
-        log_level = logging.NOTSET
-        app_name = 'NONE'
-        app_env = 'NONE'
-
+        log_level = int(log_level or logging.DEBUG if config.DEBUG_MODE else logging.NOTSET)
+        self.ml_service = config.APPLICATION_NAME
+        self.service_level = config.SERVICE_LEVEL
         self.log = logging.getLogger(logger_name)
         handler = logging.StreamHandler()
         formatter = self.JsonFormatter()
         handler.setFormatter(formatter)
+        handler.setLevel(log_level)
         self.log.addHandler(handler)
         self.log.setLevel(log_level)
-        self.ml_service = app_name
-        self.service_level = app_env
-        if config is not None:
-            self.init_app(config)
-
-    def init_app(self, config: RekcurdConfig):
-        self.config = config
-        self.ml_service = config.APPLICATION_NAME
-        self.service_level = config.SERVICE_LEVEL
 
     def exception(self, message: str) -> None:
         """
@@ -127,31 +121,28 @@ class JsonServiceLogger(ServiceLoggerInterface):
             log_record['timestamp'] = int(time.time() * 1000) / 1000
             log_record['service'] = 'rekcurd'
 
-    def __init__(self, config: RekcurdConfig = None):
+    def __init__(self,
+                 logger_name: str = 'rekcurd.service',
+                 log_level: int = None,
+                 config: RekcurdConfig = RekcurdConfig()):
         """
         Constructor
-        :param config:
+        :param logger_name:
+        :param log_level:
+        :param config: RekcurdConfig
         """
-        super().__init__()
-        self.config = config
-        app_name = 'NONE'
-        app_env = 'NONE'
-
-        self.log = logging.getLogger("rekcurd.service")
-        handler = logging.StreamHandler()
-        formatter = self.JsonFormatter()
-        handler.setFormatter(formatter)
-        self.log.addHandler(handler)
-        self.log.setLevel(logging.DEBUG)
-        self.ml_service = app_name
-        self.service_level = app_env
-        if config is not None:
-            self.init_app(config)
-
-    def init_app(self, config: RekcurdConfig):
+        self.logger_name = logger_name
+        self.log_level = int(log_level or logging.DEBUG)
         self.config = config
         self.ml_service = config.APPLICATION_NAME
         self.service_level = config.SERVICE_LEVEL
+        self.log = logging.getLogger(logger_name)
+        handler = logging.StreamHandler()
+        formatter = self.JsonFormatter()
+        handler.setFormatter(formatter)
+        handler.setLevel(self.log_level)
+        self.log.addHandler(handler)
+        self.log.setLevel(self.log_level)
 
     def emit(self, request, response, suppress_log_inout: bool = False) -> None:
         """
@@ -173,6 +164,6 @@ class JsonServiceLogger(ServiceLoggerInterface):
                                           'ml_output': ml_output})
         except Exception:
             try:
-                JsonSystemLogger(self.config).exception("can't write log")
+                JsonSystemLogger(self.logger_name, self.log_level, self.config).exception("can't write log")
             except:
                 pass

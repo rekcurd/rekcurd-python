@@ -135,7 +135,7 @@ class RekcurdDashboardServicer(rekcurd_pb2_grpc.RekcurdDashboardServicer):
         """
         filepath = request.path
         local_filepath = self.app.data_server.switch_model(filepath)
-        self.app.predictor = self.app.rekcurd_functions[self.app.load_model.__name__](local_filepath)
+        self.app.predictor = self.app.load_model(local_filepath)
         return rekcurd_pb2.ModelResponse(status=1,
                                          message='Success: Switching model file.')
 
@@ -212,7 +212,7 @@ class RekcurdDashboardServicer(rekcurd_pb2_grpc.RekcurdDashboardServicer):
         detail_chunks = []
         detail_chunk = []
         metrics_size = sys.getsizeof(metrics)
-        for detail in self.app.rekcurd_functions[self.app.get_evaluate_detail.__name__](local_data_path, result_details):
+        for detail in self.app.get_evaluate_detail(local_data_path, result_details):
             detail_chunk.append(rekcurd_pb2.EvaluationResultResponse.Detail(
                 input=self.get_io_by_type(detail.input),
                 label=self.get_io_by_type(detail.label),

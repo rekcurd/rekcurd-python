@@ -14,39 +14,33 @@ from .logger_interface import SystemLoggerInterface, ServiceLoggerInterface
 
 class FluentSystemLogger(SystemLoggerInterface):
 
-    def __init__(self, config: RekcurdConfig = None) -> None:
+    def __init__(self,
+                 logger_name: str = 'rekcurd',
+                 log_level: int = None,
+                 config: RekcurdConfig = RekcurdConfig()) -> None:
         """
         Constructor
-        :param config:
+        :param logger_name:
+        :param log_level:
+        :param config: RekcurdConfig
         """
-        super().__init__()
         self.config = config
-        logger_name = 'rekcurd'
-        log_level = logging.NOTSET
-        app_name = 'NONE'
-        app_env = 'NONE'
+        log_level = int(log_level or logging.DEBUG if config.DEBUG_MODE else logging.NOTSET)
+        application_name = config.APPLICATION_NAME
+        service_level = config.SERVICE_LEVEL
         self.log = logging.getLogger(logger_name)
         self.log.setLevel(log_level)
-        self.log.addHandler(self.__init_fluent_handler(app_name, app_env, log_level))
-        if config is not None:
-            self.init_app(config)
+        self.log.addHandler(self.__init_fluent_handler(application_name, service_level, log_level))
 
-    def init_app(self, config: RekcurdConfig):
-        self.config = config
-        app_name = config.APPLICATION_NAME
-        app_env = config.SERVICE_LEVEL
-        log_level = logging.NOTSET
-        self.log.addHandler(self.__init_fluent_handler(app_name, app_env, log_level))
-
-    def __init_fluent_handler(self, app_name: str, app_env: str, log_level: int):
+    def __init_fluent_handler(self, application_name: str, service_level: str, log_level: int):
         custom_format = {
             'host': gethostname(),
             'short_message': '%(message)s',
             'timestamp': '%(created)d.%(msecs)d',
             'level': '%(loglevel)d',
             'service': 'rekcurd',
-            'ml_service': app_name,
-            'service_level': app_env
+            'ml_service': application_name,
+            'service_level': service_level
         }
         fluent_handler = handler.FluentHandler('rekcurd')
         formatter = handler.FluentRecordFormatter(custom_format)
@@ -92,25 +86,22 @@ class FluentSystemLogger(SystemLoggerInterface):
 
 class FluentServiceLogger(ServiceLoggerInterface):
 
-    def __init__(self, config: RekcurdConfig = None):
+    def __init__(self,
+                 logger_name: str = 'rekcurd.service',
+                 log_level: int = None,
+                 config: RekcurdConfig = RekcurdConfig()):
         """
         Constructor
-        :param config:
+        :param logger_name:
+        :param log_level:
+        :param config: RekcurdConfig
         """
-        super().__init__()
-        self.config = config
-        app_name = 'NONE'
-        app_env = 'NONE'
-        self.logger = sender.FluentSender('rekcurd_service')
-        self.ml_service = app_name
-        self.service_level = app_env
-        if config is not None:
-            self.init_app(config)
-
-    def init_app(self, config: RekcurdConfig):
+        self.logger_name = logger_name
+        self.log_level = int(log_level or logging.DEBUG)
         self.config = config
         self.ml_service = config.APPLICATION_NAME
         self.service_level = config.SERVICE_LEVEL
+        self.logger = sender.FluentSender(logger_name)
 
     def emit(self, request, response, suppress_log_inout: bool = False) -> None:
         """
@@ -132,7 +123,7 @@ class FluentServiceLogger(ServiceLoggerInterface):
                 'host': gethostname(),
                 'short_message': 'prediction result.',
                 'timestamp': int(time.time() * 1000) / 1000,
-                'level': logging.INFO,
+                'level': self.log_level,
                 'service': 'rekcurd',
                 'ml_service': self.ml_service,
                 'service_level': self.service_level,
@@ -141,6 +132,6 @@ class FluentServiceLogger(ServiceLoggerInterface):
             })
         except:
             try:
-                FluentSystemLogger(self.config).exception("can't write log")
+                FluentSystemLogger(self.logger_name, self.log_level, self.config).exception("can't write log")
             except:
                 pass
