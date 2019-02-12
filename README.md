@@ -34,7 +34,7 @@ $ pip install rekcurd
 ```
 
 ## How to use
-Example code is available [here](https://github.com/rekcurd/rekcurd-example).
+Example code is available [here](https://github.com/rekcurd/rekcurd-example/tree/master/python/sklearn-digits).
 
 
 ## Unittest
