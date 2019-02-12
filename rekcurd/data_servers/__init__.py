@@ -40,6 +40,9 @@ class DataServer(object):
 
     def switch_model(self, filepath: str) -> str:
         valid_path = convert_to_valid_path(filepath)
+        if filepath != str(valid_path):
+            raise Exception(f'Error: Invalid file path specified -> {filepath}')
+
         local_filepath = Path(self._api_handler.LOCAL_MODEL_DIR, valid_path.name)
         if not local_filepath.exists():
             local_filepath.parent.mkdir(parents=True, exist_ok=True)
@@ -67,6 +70,9 @@ class DataServer(object):
 
     def get_evaluation_data_path(self, filepath: str) -> str:
         valid_path = convert_to_valid_path(filepath)
+        if filepath != str(valid_path):
+            raise Exception(f'Error: Invalid file path specified -> {filepath}')
+
         local_filepath = Path(self._api_handler.LOCAL_EVAL_DIR, valid_path.name)
         if not local_filepath.exists():
             local_filepath.parent.mkdir(parents=True, exist_ok=True)
@@ -75,6 +81,9 @@ class DataServer(object):
 
     def _get_eval_result(self, filepath: str, suffix: str):
         valid_path = convert_to_valid_path(filepath)
+        if filepath != str(valid_path):
+            raise Exception(f'Error: Invalid file path specified -> {filepath}')
+
         local_filepath = Path(self._api_handler.LOCAL_EVAL_DIR, valid_path.name+suffix)
         if not local_filepath.exists():
             local_filepath.mkdir(parents=True, exist_ok=True)
