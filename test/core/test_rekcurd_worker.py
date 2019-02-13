@@ -1,3 +1,4 @@
+import os
 import unittest
 from functools import wraps
 from unittest.mock import Mock, patch
@@ -32,12 +33,14 @@ class RekcurdWorkerTest(unittest.TestCase):
     """
 
     def setUp(self):
-        import os
         os.environ["REKCURD_UNITTEST"] = "True"
         app.load_config_file("./test/test-settings.yml")
         app.data_server = DataServer(app.config)
         app.system_logger = JsonSystemLogger(config=app.config)
         app.service_logger = JsonServiceLogger(config=app.config)
+
+    def tearDown(self):
+        del os.environ["REKCURD_UNITTEST"]
 
     @patch_predictor()
     def test_run(self):
