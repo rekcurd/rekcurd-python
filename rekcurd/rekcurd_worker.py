@@ -103,6 +103,7 @@ class Rekcurd(metaclass=ABCMeta):
 
     def run(self, host: str = None, port: int = None, max_workers: int = None, **options):
         import grpc
+        import os
         import time
         from concurrent import futures
         from rekcurd.protobuf import rekcurd_pb2_grpc
@@ -136,10 +137,11 @@ class Rekcurd(metaclass=ABCMeta):
         self.system_logger.info("Start rekcurd worker on {0}:{1}".format(host, port))
         server.start()
         try:
-            while True:
+            while os.getenv("REKCURD_UNITTEST", "False").lower() == 'false':
                 time.sleep(86400)
         except KeyboardInterrupt:
             self.system_logger.info("Shutdown rekcurd worker.")
+        finally:
             server.stop(0)
 
     # TODO: DEPRECATED BELOW
