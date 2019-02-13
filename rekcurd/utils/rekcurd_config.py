@@ -67,7 +67,7 @@ class RekcurdConfig:
             ceph_port: int = None, ceph_is_secure: bool = None,
             ceph_bucket_name: str = None,
             **options):
-        self.DEBUG_MODE = bool(debug_mode or self.DEBUG_MODE)
+        self.DEBUG_MODE = debug_mode if debug_mode is not None else self.DEBUG_MODE
         self.APPLICATION_NAME = application_name or self.APPLICATION_NAME
         self.SERVICE_NAME = self.APPLICATION_NAME
         self.SERVICE_PORT = int(service_port or self.SERVICE_PORT)
@@ -79,7 +79,7 @@ class RekcurdConfig:
         self.CEPH_SECRET_KEY = ceph_secret_key or self.CEPH_SECRET_KEY
         self.CEPH_HOST = ceph_host or self.CEPH_HOST
         self.CEPH_PORT = int(ceph_port or self.CEPH_PORT)
-        self.CEPH_IS_SECURE = bool(ceph_is_secure or self.CEPH_IS_SECURE)
+        self.CEPH_IS_SECURE = ceph_is_secure if ceph_is_secure is not None else self.CEPH_IS_SECURE
         self.CEPH_BUCKET_NAME = ceph_bucket_name or self.CEPH_BUCKET_NAME
         # TODO: AWS
         # TODO: GCS
@@ -114,7 +114,7 @@ class RekcurdConfig:
         self.DEBUG_MODE = os.getenv("REKCURD_DEBUG_MODE", "True").lower() == 'true'
         self.APPLICATION_NAME = os.getenv("REKCURD_APPLICATION_NAME")
         self.SERVICE_NAME = os.getenv("REKCURD_SERVICE_NAME")
-        self.SERVICE_PORT = int(os.getenv("REKCURD_SERVICE_PORT"))
+        self.SERVICE_PORT = int(os.getenv("REKCURD_SERVICE_PORT", "5000"))
         self.SERVICE_LEVEL = os.getenv("REKCURD_SERVICE_LEVEL")
         model_mode = os.getenv("REKCURD_MODEL_MODE")
         self.MODEL_MODE_ENUM = ModelModeEnum.to_Enum(model_mode)
@@ -122,8 +122,8 @@ class RekcurdConfig:
         self.CEPH_ACCESS_KEY = os.getenv("REKCURD_CEPH_ACCESS_KEY")
         self.CEPH_SECRET_KEY = os.getenv("REKCURD_CEPH_SECRET_KEY")
         self.CEPH_HOST = os.getenv("REKCURD_CEPH_HOST")
-        self.CEPH_PORT = int(os.getenv("REKCURD_CEPH_PORT"))
-        self.CEPH_IS_SECURE = os.getenv("REKCURD_CEPH_IS_SECURE").lower() == 'true'
+        self.CEPH_PORT = int(os.getenv("REKCURD_CEPH_PORT", "8773"))
+        self.CEPH_IS_SECURE = os.getenv("REKCURD_CEPH_IS_SECURE", "False").lower() == 'true'
         self.CEPH_BUCKET_NAME = os.getenv("REKCURD_CEPH_BUCKET_NAME")
         # TODO: AWS
         # TODO: GCS
