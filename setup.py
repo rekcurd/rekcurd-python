@@ -61,8 +61,8 @@ setup(
     install_requires=REQUIRES,
     tests_require=TESTS_REQUIRES,
     extras_require=EXTRAS,
-    packages=['rekcurd', 'rekcurd.logger', 'rekcurd.utils',
-              'rekcurd.data_servers', 'rekcurd.protobuf'],
+    packages=['rekcurd', 'rekcurd.core', 'rekcurd.data_servers', 'rekcurd.logger',
+              'rekcurd.protobuf', 'rekcurd.utils'],
     include_package_data=True,
     long_description=LONG_DESCRIPTION,
     classifiers=[
