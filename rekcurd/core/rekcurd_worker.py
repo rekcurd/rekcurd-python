@@ -6,9 +6,9 @@ from abc import ABCMeta, abstractmethod
 from enum import Enum
 from typing import List, Tuple, Generator
 
-from .utils import RekcurdConfig, PredictInput, PredictResult, EvaluateResult, EvaluateDetail, EvaluateResultDetail
-from .logger import SystemLoggerInterface, ServiceLoggerInterface, JsonSystemLogger, JsonServiceLogger
-from .data_servers import DataServer
+from rekcurd.utils import RekcurdConfig, PredictInput, PredictResult, EvaluateResult, EvaluateDetail, EvaluateResultDetail
+from rekcurd.logger import SystemLoggerInterface, ServiceLoggerInterface, JsonSystemLogger, JsonServiceLogger
+from rekcurd.data_servers import DataServer
 
 
 class Rekcurd(metaclass=ABCMeta):

@@ -9,8 +9,8 @@ from grpc import ServicerContext
 from typing import Iterator, Union
 
 from .rekcurd_worker import Rekcurd
-from .utils import PredictResult
-from .protobuf import rekcurd_pb2, rekcurd_pb2_grpc
+from rekcurd.utils import PredictResult
+from rekcurd.protobuf import rekcurd_pb2, rekcurd_pb2_grpc
 
 
 RekcurdInput = Union[

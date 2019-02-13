@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 
 from rekcurd.data_servers import DataServer
 from rekcurd.logger import JsonSystemLogger, JsonServiceLogger
-from . import app, Type
+from test import app, Type
 
 
 def patch_predictor():

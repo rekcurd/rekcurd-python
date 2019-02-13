@@ -1,4 +1,4 @@
-from . import app, Type
+from test import app, Type
 
 import unittest
 import time
@@ -8,7 +8,7 @@ import grpc_testing
 from grpc import StatusCode
 
 from rekcurd.protobuf import rekcurd_pb2
-from rekcurd.rekcurd_worker_servicer import RekcurdWorkerServicer
+from rekcurd import RekcurdWorkerServicer
 from rekcurd.data_servers import DataServer
 from rekcurd.logger import JsonSystemLogger, JsonServiceLogger
 from rekcurd.utils import PredictResult

@@ -13,8 +13,8 @@ from grpc import ServicerContext
 from typing import Iterator, Union, List
 
 from .rekcurd_worker import Rekcurd
-from .protobuf import rekcurd_pb2, rekcurd_pb2_grpc
-from .utils import PredictInput, PredictLabel, PredictScore
+from rekcurd.protobuf import rekcurd_pb2, rekcurd_pb2_grpc
+from rekcurd.utils import PredictInput, PredictLabel, PredictScore
 
 
 def error_handling(error_response):

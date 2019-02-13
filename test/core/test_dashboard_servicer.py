@@ -6,11 +6,11 @@ import grpc_testing
 from grpc import StatusCode
 
 from rekcurd.protobuf import rekcurd_pb2
-from rekcurd.rekcurd_dashboard_servicer import RekcurdDashboardServicer
+from rekcurd.core.rekcurd_dashboard_servicer import RekcurdDashboardServicer
 from rekcurd.data_servers import DataServer
 from rekcurd.logger import JsonSystemLogger, JsonServiceLogger
 from rekcurd.utils import EvaluateResult, EvaluateResultDetail, PredictResult, EvaluateDetail
-from . import app
+from test import app
 
 
 target_service = rekcurd_pb2.DESCRIPTOR.services_by_name['RekcurdDashboard']
@@ -40,9 +40,9 @@ def patch_predictor():
                           new=Mock(return_value=True)) as _, \
                     patch('rekcurd.data_servers.CephHandler.upload',
                           new=Mock(return_value=True)) as _, \
-                    patch('rekcurd.rekcurd_dashboard_servicer.pickle',
+                    patch('rekcurd.core.rekcurd_dashboard_servicer.pickle',
                           new=Mock()) as _, \
-                    patch('rekcurd.rekcurd_dashboard_servicer.pickle.load',
+                    patch('rekcurd.core.rekcurd_dashboard_servicer.pickle.load',
                           new=Mock(return_value=eval_result)) as _, \
                     patch('builtins.open', new_callable=mock_open) as _:
                 return func(*args, **kwargs)
