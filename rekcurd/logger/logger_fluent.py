@@ -15,7 +15,7 @@ from .logger_interface import SystemLoggerInterface, ServiceLoggerInterface
 class FluentSystemLogger(SystemLoggerInterface):
 
     def __init__(self,
-                 logger_name: str = 'rekcurd',
+                 logger_name: str = 'rekcurd.system',
                  log_level: int = None,
                  config: RekcurdConfig = RekcurdConfig()) -> None:
         """
@@ -30,6 +30,7 @@ class FluentSystemLogger(SystemLoggerInterface):
         service_level = config.SERVICE_LEVEL
         self.log = logging.getLogger(logger_name)
         self.log.setLevel(log_level)
+        self.log.handlers = []
         self.log.addHandler(self.__init_fluent_handler(application_name, service_level, log_level))
 
     def __init_fluent_handler(self, application_name: str, service_level: str, log_level: int):

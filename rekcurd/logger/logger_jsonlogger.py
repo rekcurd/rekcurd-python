@@ -32,7 +32,7 @@ class JsonSystemLogger(SystemLoggerInterface):
             log_record['service'] = 'rekcurd'
 
     def __init__(self,
-                 logger_name: str = 'rekcurd',
+                 logger_name: str = 'rekcurd.system',
                  log_level: int = None,
                  config: RekcurdConfig = RekcurdConfig()) -> None:
         """
@@ -50,6 +50,7 @@ class JsonSystemLogger(SystemLoggerInterface):
         formatter = self.JsonFormatter()
         handler.setFormatter(formatter)
         handler.setLevel(log_level)
+        self.log.handlers = []
         self.log.addHandler(handler)
         self.log.setLevel(log_level)
 
