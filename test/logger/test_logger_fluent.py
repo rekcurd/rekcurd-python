@@ -16,16 +16,16 @@ class FluentSystemLoggerTest(unittest.TestCase):
         self.assertIsNone(self.logger.exception("Exception"))
 
     def test_error(self):
-        self.assertIsNone(self.logger.error("Exception"))
+        self.assertIsNone(self.logger.error("Error"))
 
     def test_debug(self):
-        self.assertIsNone(self.logger.debug("Exception"))
+        self.assertIsNone(self.logger.debug("Debug"))
 
     def test_info(self):
-        self.assertIsNone(self.logger.info("Exception"))
+        self.assertIsNone(self.logger.info("Info"))
 
     def test_warn(self):
-        self.assertIsNone(self.logger.warn("Exception"))
+        self.assertIsNone(self.logger.warn("Warn"))
 
 
 class FluentServiceLoggerTest(unittest.TestCase):
