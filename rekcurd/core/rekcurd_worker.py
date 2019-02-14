@@ -19,7 +19,6 @@ class Rekcurd(metaclass=ABCMeta):
     _service_logger: ServiceLoggerInterface = None
     config: RekcurdConfig = None
     data_server: DataServer = None
-    predictor: object = None
 
     @abstractmethod
     def load_model(self, filepath: str) -> object:
@@ -127,12 +126,12 @@ class Rekcurd(metaclass=ABCMeta):
         port = int(port or self.config.SERVICE_PORT or _port)
         max_workers = int(max_workers or _max_workers)
 
-        self.predictor = self.load_model(self.data_server.get_model_path())
+        predictor = self.load_model(self.data_server.get_model_path())
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=max_workers))
         rekcurd_pb2_grpc.add_RekcurdDashboardServicer_to_server(
-            RekcurdDashboardServicer(app=self), server)
+            RekcurdDashboardServicer(app=self, predictor=predictor), server)
         rekcurd_pb2_grpc.add_RekcurdWorkerServicer_to_server(
-            RekcurdWorkerServicer(app=self), server)
+            RekcurdWorkerServicer(app=self, predictor=predictor), server)
         server.add_insecure_port("{0}:{1}".format(host, port))
         self.system_logger.info("Start rekcurd worker on {0}:{1}".format(host, port))
         server.start()

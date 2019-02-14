@@ -75,8 +75,9 @@ class RekcurdDashboardServicer(rekcurd_pb2_grpc.RekcurdDashboardServicer):
     CHUNK_SIZE = 100
     BYTE_LIMIT = 4190000
 
-    def __init__(self, app: Rekcurd):
+    def __init__(self, app: Rekcurd, predictor: object):
         self.app = app
+        self.predictor = predictor
         self.logger = app.system_logger
 
     def on_error(self, error: Exception):
@@ -135,7 +136,7 @@ class RekcurdDashboardServicer(rekcurd_pb2_grpc.RekcurdDashboardServicer):
         """
         filepath = request.path
         local_filepath = self.app.data_server.switch_model(filepath)
-        self.app.predictor = self.app.load_model(local_filepath)
+        self.predictor = self.app.load_model(local_filepath)
         return rekcurd_pb2.ModelResponse(status=1,
                                          message='Success: Switching model file.')
 
@@ -155,7 +156,7 @@ class RekcurdDashboardServicer(rekcurd_pb2_grpc.RekcurdDashboardServicer):
         result_path = first_req.result_path
 
         local_data_path = self.app.data_server.get_evaluation_data_path(data_path)
-        result, details = self.app.evaluate(self.app.predictor, local_data_path)
+        result, details = self.app.evaluate(self.predictor, local_data_path)
         label_ios = [self.get_io_by_type(l) for l in result.label]
         metrics = rekcurd_pb2.EvaluationMetrics(num=result.num,
                                                 accuracy=result.accuracy,

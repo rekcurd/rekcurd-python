@@ -29,8 +29,9 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
         ARRAY_FLOAT = 4
         ARRAY_STRING = 5
 
-    def __init__(self, app: Rekcurd):
+    def __init__(self, app: Rekcurd, predictor: object):
         self.app = app
+        self.predictor = predictor
         self.logger = app.service_logger
 
     def Process(self,
@@ -47,7 +48,7 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
 
         single_output = self.app.get_type_output() in [self.Type.STRING, self.Type.BYTES]
         try:
-            result = self.app.predict(self.app.predictor, input, ioption)
+            result = self.app.predict(self.predictor, input, ioption)
         except:
             if single_output:
                 if isinstance(response, rekcurd_pb2.StringOutput):
