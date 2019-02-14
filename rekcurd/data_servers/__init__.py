@@ -64,7 +64,6 @@ class DataServer(object):
             for request in request_iterator:
                 f.write(request.data)
             del first_req
-            f.close()
         self._api_handler.upload(filepath, str(local_filepath))
         return str(local_filepath)
 
@@ -110,7 +109,6 @@ class DataServer(object):
             for request in request_iterator:
                 f.write(request.data)
             del first_req
-            f.close()
         self._api_handler.upload(filepath, str(local_filepath))
         return str(local_filepath)
 
@@ -122,7 +120,6 @@ class DataServer(object):
         local_filepath.parent.mkdir(parents=True, exist_ok=True)
         with local_filepath.open(mode='wb') as f:
             pickle.dump(data, f)
-            f.close()
         self._api_handler.upload(filepath+suffix, str(local_filepath))
         return str(local_filepath)
 
