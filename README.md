@@ -24,7 +24,7 @@ From source:
 ```bash
 $ git clone --recursive https://github.com/rekcurd/rekcurd-python.git
 $ cd rekcurd-python
-$ python setup.py install
+$ pip install -e .
 ```
 
 From [PyPi](https://pypi.org/project/rekcurd/) directly:
@@ -34,7 +34,11 @@ $ pip install rekcurd
 ```
 
 ## How to use
-Example code is available [here](https://github.com/rekcurd/rekcurd-example/tree/master/python/sklearn-digits).
+Example code is available [here](https://github.com/rekcurd/rekcurd-example/tree/master/python/sklearn-digits). You can generate Rekcurd application template by a following command.
+
+```bash
+$ rekcurd startapp {Your application name}
+```
 
 
 ## Unittest
