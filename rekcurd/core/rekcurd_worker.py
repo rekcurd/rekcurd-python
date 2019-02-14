@@ -126,7 +126,15 @@ class Rekcurd(metaclass=ABCMeta):
         port = int(port or self.config.SERVICE_PORT or _port)
         max_workers = int(max_workers or _max_workers)
 
-        predictor = self.load_model(self.data_server.get_model_path())
+        try:
+            model_path = self.data_server.get_model_path()
+            predictor = self.load_model(model_path)
+            if predictor is None:
+                raise Exception("Error: No predictor found. Need your \"Rekcurd\" implementation.")
+        except Exception as e:
+            self.system_logger.error(str(e))
+            print(str(e))
+            return
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=max_workers))
         rekcurd_pb2_grpc.add_RekcurdDashboardServicer_to_server(
             RekcurdDashboardServicer(app=self, predictor=predictor), server)
