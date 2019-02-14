@@ -6,9 +6,11 @@ import grpc_testing
 from grpc import StatusCode
 
 from rekcurd.protobuf import rekcurd_pb2
-from rekcurd.rekcurd_dashboard_servicer import RekcurdDashboardServicer
+from rekcurd.core.rekcurd_dashboard_servicer import RekcurdDashboardServicer
+from rekcurd.data_servers import DataServer
+from rekcurd.logger import JsonSystemLogger, JsonServiceLogger
 from rekcurd.utils import EvaluateResult, EvaluateResultDetail, PredictResult, EvaluateDetail
-from . import app, system_logger
+from test import app
 
 
 target_service = rekcurd_pb2.DESCRIPTOR.services_by_name['RekcurdDashboard']
@@ -30,18 +32,19 @@ def patch_predictor():
     def test_method(func):
         @wraps(func)
         def inner_method(*args, **kwargs):
-            with patch('rekcurd.rekcurd_dashboard_servicer.uuid.uuid4',
-                new=Mock(return_value=Mock(hex='my_uuid'))) as _, \
-                    patch('rekcurd.rekcurd_dashboard_servicer.shutil.move',
-                        new=Mock(return_value=True)) as _, \
-                    patch('rekcurd.rekcurd_dashboard_servicer.Path',
-                        new=Mock(return_value=Mock())) as mock_path, \
-                    patch('rekcurd.rekcurd_dashboard_servicer.pickle',
+            with patch('rekcurd.data_servers.LocalHandler.download',
+                       new=Mock(return_value=True)) as _, \
+                    patch('rekcurd.data_servers.LocalHandler.upload',
+                          new=Mock(return_value=True)) as _, \
+                    patch('rekcurd.data_servers.CephHandler.download',
+                          new=Mock(return_value=True)) as _, \
+                    patch('rekcurd.data_servers.CephHandler.upload',
+                          new=Mock(return_value=True)) as _, \
+                    patch('rekcurd.core.rekcurd_dashboard_servicer.pickle',
                           new=Mock()) as _, \
-                    patch('rekcurd.rekcurd_dashboard_servicer.pickle.load',
+                    patch('rekcurd.core.rekcurd_dashboard_servicer.pickle.load',
                           new=Mock(return_value=eval_result)) as _, \
                     patch('builtins.open', new_callable=mock_open) as _:
-                mock_path.return_value.name = 'my_path'
                 return func(*args, **kwargs)
         return inner_method
     return test_method
@@ -52,13 +55,14 @@ class RekcurdWorkerServicerTest(unittest.TestCase):
     """
 
     def setUp(self):
-        app.get_model_path = Mock(return_value='test/my_path')
-        app.get_eval_path = Mock(return_value='test/my_eval_path')
-        app.config.SERVICE_INFRA = 'default'
+        app.load_config_file("./test/test-settings.yml")
+        app.data_server = DataServer(app.config)
+        app.system_logger = JsonSystemLogger(config=app.config)
+        app.service_logger = JsonServiceLogger(config=app.config)
         app.evaluate = Mock(return_value=(eval_result, eval_result_details))
         self._real_time = grpc_testing.strict_real_time()
         self._fake_time = grpc_testing.strict_fake_time(time.time())
-        servicer = RekcurdDashboardServicer(logger=system_logger, app=app)
+        servicer = RekcurdDashboardServicer(app=app, predictor=None)
         descriptors_to_services = {
             target_service: servicer
         }
@@ -74,7 +78,7 @@ class RekcurdWorkerServicerTest(unittest.TestCase):
         response, trailing_metadata, code, details = rpc.termination()
         self.assertIs(code, StatusCode.OK)
         self.assertEqual(response.application_name, 'test')
-        self.assertEqual(response.service_name, 'test-001')
+        self.assertEqual(response.service_name, 'test')
         self.assertEqual(response.service_level, 'development')
 
     @patch_predictor()
@@ -238,14 +242,14 @@ class RekcurdWorkerServicerTest(unittest.TestCase):
         rpc.termination()
 
     def test_get_io_by_type(self):
-        servicer = RekcurdDashboardServicer(logger=system_logger, app=app)
+        servicer = RekcurdDashboardServicer(app=app, predictor=None)
         self.assertEqual(servicer.get_io_by_type('test').str.val, ['test'])
         self.assertEqual(servicer.get_io_by_type(['test', 'test2']).str.val, ['test', 'test2'])
         self.assertEqual(servicer.get_io_by_type(2).tensor.val, [2])
         self.assertEqual(servicer.get_io_by_type([2, 3]).tensor.val, [2, 3])
 
     def test_get_score_by_type(self):
-        servicer = RekcurdDashboardServicer(logger=system_logger, app=app)
+        servicer = RekcurdDashboardServicer(app=app, predictor=None)
         score = 4.5
         self.assertEqual(servicer.get_score_by_type(score), [score])
         self.assertEqual(servicer.get_score_by_type([score]), [score])

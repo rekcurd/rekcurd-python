@@ -18,6 +18,7 @@ from rekcurd import _version
 __project__ = _project.__project__
 __version__ = _version.__version__
 
-from .rekcurd_worker import Rekcurd
-from .rekcurd_worker_servicer import RekcurdInput, RekcurdOutput, RekcurdWorkerServicer
-from .rekcurd_dashboard_servicer import RekcurdDashboardServicer
+from rekcurd.core import (
+    Rekcurd, RekcurdInput, RekcurdOutput,
+    RekcurdWorkerServicer, RekcurdDashboardServicer
+)

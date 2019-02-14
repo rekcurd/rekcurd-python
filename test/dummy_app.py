@@ -4,21 +4,20 @@
 from typing import List, Tuple, Generator
 
 from rekcurd import Rekcurd
-from rekcurd.utils import PredictLabel, PredictResult, EvaluateResult, EvaluateDetail, EvaluateResultDetail
+from rekcurd.utils import PredictInput, PredictResult, EvaluateResult, EvaluateDetail, EvaluateResultDetail
 
 
 class DummyApp(Rekcurd):
-    def __init__(self, config_file: str = None):
-        super().__init__(config_file)
-
-    def load_model(self) -> None:
+    def load_model(self, filepath: str) -> object:
         pass
 
-    def predict(self, input: PredictLabel, option: dict = None) -> PredictResult:
+    def predict(self, predictor: object, idata: PredictInput, option: dict = None) -> PredictResult:
         pass
 
-    def evaluate(self, file_path: str) -> Tuple[EvaluateResult, List[EvaluateResultDetail]]:
+    def evaluate(self, predictor: object, filepath: str) -> Tuple[EvaluateResult, List[EvaluateResultDetail]]:
         pass
 
-    def get_evaluate_detail(self, file_path: str, results: List[EvaluateResultDetail]) -> Generator[EvaluateDetail, None, None]:
+    def get_evaluate_detail(self, filepath: str, details: List[EvaluateResultDetail]) -> Generator[EvaluateDetail, None, None]:
         pass
+
+app = DummyApp()

@@ -1,23 +1,20 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+
 import traceback
 
 import grpc
 import types
-import shutil
-import uuid
 import pickle
 import sys
-from pathlib import Path
 
 from grpc import ServicerContext
 from typing import Iterator, Union, List
 
-from .logger import SystemLoggerInterface
-from .rekcurd_worker import Rekcurd, db, ModelAssignment
-from .protobuf import rekcurd_pb2, rekcurd_pb2_grpc
-from .utils import PredictInput, PredictLabel, PredictScore
+from .rekcurd_worker import Rekcurd
+from rekcurd.protobuf import rekcurd_pb2, rekcurd_pb2_grpc
+from rekcurd.utils import PredictInput, PredictLabel, PredictScore
 
 
 def error_handling(error_response):
@@ -46,9 +43,6 @@ def error_handling(error_response):
             try:
                 return func(*args, **kwargs)
             except Exception as error:
-                # DB rollback
-                db.session.rollback()
-
                 # gRPC
                 context = args[2]
                 context.set_code(grpc.StatusCode.UNKNOWN)
@@ -60,8 +54,6 @@ def error_handling(error_response):
                         'You must define on_error as method'
                     servicer.on_error(error)
                 return error_response
-            finally:
-                db.session.close()
 
         return _wrapper
 
@@ -80,16 +72,13 @@ class RekcurdDashboardServicer(rekcurd_pb2_grpc.RekcurdDashboardServicer):
         Machine learning model
     """
 
-    # postfix for evaluate result
-    EVALUATE_RESULT = '_eval_res.pkl'
-    EVALUATE_DETAIL = '_eval_detail.pkl'
-
     CHUNK_SIZE = 100
     BYTE_LIMIT = 4190000
 
-    def __init__(self, logger: SystemLoggerInterface, app: Rekcurd):
-        self.logger = logger
+    def __init__(self, app: Rekcurd, predictor: object):
         self.app = app
+        self.predictor = predictor
+        self.logger = app.system_logger
 
     def on_error(self, error: Exception):
         """ Postprocessing on error
@@ -104,21 +93,20 @@ class RekcurdDashboardServicer(rekcurd_pb2_grpc.RekcurdDashboardServicer):
         self.logger.error(str(error))
         self.logger.error(traceback.format_exc())
 
-    def is_valid_upload_filename(self, filename: str) -> bool:
-        if Path(filename).name == filename:
-            return True
-        return False
-
     def ServiceInfo(self,
                     request: rekcurd_pb2.ServiceInfoRequest,
                     context: ServicerContext
                     ) -> rekcurd_pb2.ServiceInfoResponse:
         """ Get service info.
+
+        :param request:
+        :param context:
+        :return:
         """
         return rekcurd_pb2.ServiceInfoResponse(
             application_name=self.app.config.APPLICATION_NAME,
             service_name=self.app.config.SERVICE_NAME,
-            service_level=self.app.config.SERVICE_LEVEL_ENUM.value)
+            service_level=self.app.config.SERVICE_LEVEL)
 
     @error_handling(rekcurd_pb2.ModelResponse(status=0, message='Error: Uploading model file.'))
     def UploadModel(self,
@@ -126,24 +114,12 @@ class RekcurdDashboardServicer(rekcurd_pb2_grpc.RekcurdDashboardServicer):
                     context: ServicerContext
                     ) -> rekcurd_pb2.ModelResponse:
         """ Upload your latest ML model.
+
+        :param request_iterator:
+        :param context:
+        :return:
         """
-        first_req = next(request_iterator)
-        save_path = first_req.path
-        if not self.is_valid_upload_filename(save_path):
-            raise Exception(f'Error: Invalid model path specified -> {save_path}')
-
-        tmp_path = self.app.get_model_path(uuid.uuid4().hex)
-        Path(tmp_path).parent.mkdir(parents=True, exist_ok=True)
-        with open(tmp_path, 'wb') as f:
-            f.write(first_req.data)
-            for request in request_iterator:
-                f.write(request.data)
-            del first_req
-            f.close()
-
-        model_path = self.app.get_model_path(save_path)
-        Path(model_path).parent.mkdir(parents=True, exist_ok=True)
-        shutil.move(tmp_path, model_path)
+        self.app.data_server.upload_model(request_iterator)
         return rekcurd_pb2.ModelResponse(status=1,
                                          message='Success: Uploading model file.')
 
@@ -152,23 +128,15 @@ class RekcurdDashboardServicer(rekcurd_pb2_grpc.RekcurdDashboardServicer):
                     request: rekcurd_pb2.SwitchModelRequest,
                     context: ServicerContext
                     ) -> rekcurd_pb2.ModelResponse:
-        """ Switch your ML model to run.
+        """ Switch your ML model.
+
+        :param request:
+        :param context:
+        :return:
         """
-        if not self.is_valid_upload_filename(request.path):
-            raise Exception(f'Error: Invalid model path specified -> {request.path}')
-
-        model_assignment = self.app.db.session.query(ModelAssignment).filter(ModelAssignment.service_name == self.app.config.SERVICE_NAME).one()
-        model_assignment.model_path = request.path
-        model_assignment.first_boot = False
-        self.app.db.session.commit()
-
-        # :TODO: Use enum for SERVICE_INFRA
-        if self.app.config.SERVICE_INFRA == "kubernetes":
-            pass
-        elif self.app.config.SERVICE_INFRA == "default":
-            self.app.model_path = self.app.get_model_path()
-            self.app.load_model()
-
+        filepath = request.path
+        local_filepath = self.app.data_server.switch_model(filepath)
+        self.predictor = self.app.load_model(local_filepath)
         return rekcurd_pb2.ModelResponse(status=1,
                                          message='Success: Switching model file.')
 
@@ -178,16 +146,17 @@ class RekcurdDashboardServicer(rekcurd_pb2_grpc.RekcurdDashboardServicer):
                       context: ServicerContext
                       ) -> rekcurd_pb2.EvaluateModelResponse:
         """ Evaluate your ML model and save result.
+
+        :param request_iterator:
+        :param context:
+        :return:
         """
         first_req = next(request_iterator)
         data_path = first_req.data_path
         result_path = first_req.result_path
-        if not self.is_valid_upload_filename(data_path):
-            raise Exception(f'Error: Invalid evaluation file path specified -> {data_path}')
-        if not self.is_valid_upload_filename(result_path):
-            raise Exception(f'Error: Invalid evaluation result file path specified -> {result_path}')
 
-        result, details = self.app.evaluate(self.app.get_eval_path(data_path))
+        local_data_path = self.app.data_server.get_evaluation_data_path(data_path)
+        result, details = self.app.evaluate(self.predictor, local_data_path)
         label_ios = [self.get_io_by_type(l) for l in result.label]
         metrics = rekcurd_pb2.EvaluationMetrics(num=result.num,
                                                 accuracy=result.accuracy,
@@ -196,14 +165,8 @@ class RekcurdDashboardServicer(rekcurd_pb2_grpc.RekcurdDashboardServicer):
                                                 fvalue=result.fvalue,
                                                 option=result.option,
                                                 label=label_ios)
-
-        eval_result_path = self.app.get_eval_path(result_path)
-        Path(eval_result_path).parent.mkdir(parents=True, exist_ok=True)
-        with open(eval_result_path + self.EVALUATE_RESULT, 'wb') as f:
-            pickle.dump(result, f)
-        with open(eval_result_path + self.EVALUATE_DETAIL, 'wb') as f:
-            pickle.dump(details, f)
-
+        self.app.data_server.upload_evaluation_result_summary(result, result_path)
+        self.app.data_server.upload_evaluation_result_detail(details, result_path)
         return rekcurd_pb2.EvaluateModelResponse(metrics=metrics)
 
     @error_handling(rekcurd_pb2.UploadEvaluationDataResponse(status=0, message='Error: Uploading evaluation data.'))
@@ -212,18 +175,12 @@ class RekcurdDashboardServicer(rekcurd_pb2_grpc.RekcurdDashboardServicer):
                              context: ServicerContext
                              ) -> rekcurd_pb2.UploadEvaluationDataResponse:
         """ Save evaluation data
+
+        :param request_iterator:
+        :param context:
+        :return:
         """
-        first_req = next(request_iterator)
-        save_path = first_req.data_path
-        if not self.is_valid_upload_filename(save_path):
-            raise Exception(f'Error: Invalid evaluation file path specified -> {save_path}')
-
-        eval_data = b''.join([first_req.data] + [r.data for r in request_iterator])
-        eval_path = self.app.get_eval_path(save_path)
-        Path(eval_path).parent.mkdir(parents=True, exist_ok=True)
-        with open(eval_path, 'wb') as f:
-            f.write(eval_data)
-
+        self.app.data_server.upload_evaluation_data(request_iterator)
         return rekcurd_pb2.UploadEvaluationDataResponse(status=1,
                                                         message='Success: Uploading evaluation data.')
 
@@ -236,15 +193,13 @@ class RekcurdDashboardServicer(rekcurd_pb2_grpc.RekcurdDashboardServicer):
         """
         data_path = request.data_path
         result_path = request.result_path
-        if not self.is_valid_upload_filename(data_path):
-            raise Exception(f'Error: Invalid evaluation file path specified -> {data_path}')
-        if not self.is_valid_upload_filename(result_path):
-            raise Exception(f'Error: Invalid evaluation result file path specified -> {result_path}')
+        local_data_path = self.app.data_server.get_evaluation_data_path(data_path)
+        local_result_summary_path = self.app.data_server.get_eval_result_summary(result_path)
+        local_result_detail_path = self.app.data_server.get_eval_result_detail(result_path)
 
-        eval_result_path = self.app.get_eval_path(result_path)
-        with open(eval_result_path + self.EVALUATE_DETAIL, 'rb') as f:
+        with open(local_result_detail_path, 'rb') as f:
             result_details = pickle.load(f)
-        with open(eval_result_path + self.EVALUATE_RESULT, 'rb') as f:
+        with open(local_result_summary_path, 'rb') as f:
             result = pickle.load(f)
         label_ios = [self.get_io_by_type(l) for l in result.label]
         metrics = rekcurd_pb2.EvaluationMetrics(num=result.num,
@@ -258,7 +213,7 @@ class RekcurdDashboardServicer(rekcurd_pb2_grpc.RekcurdDashboardServicer):
         detail_chunks = []
         detail_chunk = []
         metrics_size = sys.getsizeof(metrics)
-        for detail in self.app.get_evaluate_detail(self.app.get_eval_path(data_path), result_details):
+        for detail in self.app.get_evaluate_detail(local_data_path, result_details):
             detail_chunk.append(rekcurd_pb2.EvaluationResultResponse.Detail(
                 input=self.get_io_by_type(detail.input),
                 label=self.get_io_by_type(detail.label),

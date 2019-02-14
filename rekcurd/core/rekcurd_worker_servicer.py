@@ -8,9 +8,9 @@ from enum import Enum
 from grpc import ServicerContext
 from typing import Iterator, Union
 
-from .logger import ServiceLoggerInterface
-from .rekcurd_worker import PredictResult, Rekcurd
-from .protobuf import rekcurd_pb2, rekcurd_pb2_grpc
+from .rekcurd_worker import Rekcurd
+from rekcurd.utils import PredictResult
+from rekcurd.protobuf import rekcurd_pb2, rekcurd_pb2_grpc
 
 
 RekcurdInput = Union[
@@ -29,9 +29,10 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
         ARRAY_FLOAT = 4
         ARRAY_STRING = 5
 
-    def __init__(self, logger: ServiceLoggerInterface, app: Rekcurd):
-        self.logger = logger
+    def __init__(self, app: Rekcurd, predictor: object):
         self.app = app
+        self.predictor = predictor
+        self.logger = app.service_logger
 
     def Process(self,
                 request: RekcurdInput,
@@ -47,7 +48,7 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
 
         single_output = self.app.get_type_output() in [self.Type.STRING, self.Type.BYTES]
         try:
-            result = self.app.predict(input, ioption)
+            result = self.app.predict(self.predictor, input, ioption)
         except:
             if single_output:
                 if isinstance(response, rekcurd_pb2.StringOutput):
