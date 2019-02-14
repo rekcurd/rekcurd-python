@@ -33,12 +33,12 @@ def patch_predictor(input_type, output_type):
     def test_method(func):
         @wraps(func)
         def inner_method(*args, **kwargs):
-            with patch('test.dummy_app.DummyApp.get_type_input',
+            with patch('test.RekcurdAppTemplateApp.get_type_input',
                        new=Mock(return_value=input_type)) as _, \
-                    patch('test.dummy_app.DummyApp.get_type_output',
+                    patch('test.RekcurdAppTemplateApp.get_type_output',
                           new=Mock(return_value=output_type)) as _, \
-                    patch('test.dummy_app.DummyApp.load_model') as _, \
-                    patch('test.dummy_app.DummyApp.predict',
+                    patch('test.RekcurdAppTemplateApp.load_model') as _, \
+                    patch('test.RekcurdAppTemplateApp.predict',
                           new=Mock(return_value=_prediction_value_map[output_type])) as _:
                 return func(*args, **kwargs)
         return inner_method
