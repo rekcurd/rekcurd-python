@@ -5,23 +5,27 @@ debug: True
 
 ## Application parameters.
 app:
-  name: RekcurdAppTemplate    # This must be unique.
-  port: 5000                  # Service port. Default "5000"
-  service_level: development  # Service level. One of [development/beta/staging/sandbox/production]. Default "development"
+  name: RekcurdAppTemplate          # This must be unique.
+  port: 5000                        # Service port. Default "5000"
+  service_level: development        # Service level. One of [development/beta/staging/sandbox/production]. Default "development"
 
 ## Machine learning model access parameters.
 model:
-  mode: local                 # ML model destination. One of [local/ceph_s3/aws_s3/gcs]. "ceph_s3" uses Ceph API that is compatible with AWS S3 API. "aws_s3" uses AWS S3 API. "gcs" uses GCS API. Default "local"
-  filepath: ./model/default.model     # ML model file. Default "./model/default.model"
-
-## Ceph access parameters. Required for "ceph_s3" mode.
-ceph:
-  access_key: xxxxx           # Ceph access key.
-  secret_key: xxxxx           # Ceph secret key.
-  host: xxxxx                 # Ceph host.
-  port: 8773                  # Ceph port. Default "8773"
-  is_secure: False            # Ceph secure access. Set "False" if you are not using ssl.
-  bucket: xxxxx               # Ceph bucket name.
-
-## (TBD) AWS credentials.
-## (TBD) GCS credentials.
+  mode: local                       # ML model destination. One of [local/ceph_s3/aws_s3/gcs]. "ceph_s3" uses Ceph API that is compatible with AWS S3 API. "aws_s3" uses AWS S3 API. "gcs" uses GCS API. Default "local"
+  local:                            # Local access parameters. Required for "local" mode.
+    filepath: model/default.model   #  ML model file. Default "model/default.model"
+  ceph_s3:                          # Ceph access parameters. Required for "ceph_s3" mode.
+    filepath: model/default.model   #  ML model file. Default "model/default.model"
+    access_key: xxxxx               #  Ceph access key.
+    secret_key: xxxxx               #  Ceph secret key.
+    host: xxxxx                     #  Ceph host.
+    port: 8773                      #  Ceph port. Default "8773"
+    is_secure: False                #  Ceph secure access. Set "False" if you are not using ssl.
+    bucket: xxxxx                   #  Ceph bucket name.
+  aws_s3:                           # AWS access parameters. Required for "aws_s3" mode.
+    filepath: model/default.model   #  ML model file. Default "model/default.model"
+    access_key: xxxxx               #  AWS access key.
+    secret_key: xxxxx               #  AWS secret key.
+    bucket: xxxxx                   #  AWS bucket name.
+  gcs:                              # :TODO: GCS parameters.
+    filepath: model/default.model   #  ML model file. Default "model/default.model"

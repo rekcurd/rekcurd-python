@@ -5,4 +5,5 @@ app:
   service_level: development
 model:
   mode: local
-  filepath: ./test/model/default.model
+  local:
+    filepath: test/model/default.model
