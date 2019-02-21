@@ -61,10 +61,16 @@ setup(
     install_requires=REQUIRES,
     tests_require=TESTS_REQUIRES,
     extras_require=EXTRAS,
-    packages=['rekcurd', 'rekcurd.core', 'rekcurd.data_servers', 'rekcurd.logger',
-              'rekcurd.protobuf', 'rekcurd.utils'],
+    packages=['rekcurd', 'rekcurd.console_scripts', 'rekcurd.core',
+              'rekcurd.data_servers', 'rekcurd.logger', 'rekcurd.protobuf',
+              'rekcurd.template', 'rekcurd.utils'],
     include_package_data=True,
     long_description=LONG_DESCRIPTION,
+    entry_points={
+        'console_scripts': [
+            'rekcurd=rekcurd.console_scripts:main',
+        ],
+    },
     classifiers=[
         "Development Status :: %s" % DEVELOPMENT_STATUS,
         "Environment :: Web Environment",

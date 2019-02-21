@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+ECHO_PREFIX="[RekcurdAppTemplate application]: "
+
+set -e
+set -u
+
+echo "$ECHO_PREFIX start.."
+
+pip install -r requirements.txt
+python app.py

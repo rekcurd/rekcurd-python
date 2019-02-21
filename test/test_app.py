@@ -1,0 +1,1 @@
+../rekcurd/template/app.py-tpl

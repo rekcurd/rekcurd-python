@@ -1,6 +1,6 @@
-from test.dummy_app import DummyApp
+from test.test_app import RekcurdAppTemplateApp
 from rekcurd import RekcurdWorkerServicer
 
 
-app = DummyApp()
+app = RekcurdAppTemplateApp()
 Type = RekcurdWorkerServicer.Type

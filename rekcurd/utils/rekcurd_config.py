@@ -34,18 +34,20 @@ class RekcurdConfig:
     """
     Rekcurd configurations.
     """
+    __SERVICE_DEFAULT_PORT = 5000
+    __CEPH_DEFAULT_PORT = 8773
     KUBERNETES_MODE: str = None
     DEBUG_MODE: bool = None
     APPLICATION_NAME: str = None
     SERVICE_NAME: str = None
-    SERVICE_PORT: int = None
+    SERVICE_PORT: int = __SERVICE_DEFAULT_PORT
     SERVICE_LEVEL: str = None
     MODEL_MODE_ENUM: ModelModeEnum = None
     MODEL_FILE_PATH: str = None
     CEPH_ACCESS_KEY: str = None
     CEPH_SECRET_KEY: str = None
     CEPH_HOST: str = None
-    CEPH_PORT: int = None
+    CEPH_PORT: int = __CEPH_DEFAULT_PORT
     CEPH_IS_SECURE: bool = None
     CEPH_BUCKET_NAME: str = None
     # TODO: AWS
@@ -94,27 +96,33 @@ class RekcurdConfig:
         config_app = config.get("app", dict())
         self.APPLICATION_NAME = config_app.get("name", "sample")
         self.SERVICE_NAME = self.APPLICATION_NAME
-        self.SERVICE_PORT = config_app.get("port", 5000)
+        self.SERVICE_PORT = config_app.get("port", self.__SERVICE_DEFAULT_PORT)
         self.SERVICE_LEVEL = config_app.get("service_level", "development")
         config_model = config.get("model", dict())
         model_mode = config_model.get("mode", "local")
         self.MODEL_MODE_ENUM = ModelModeEnum.to_Enum(model_mode)
-        self.MODEL_FILE_PATH = config_model.get("filepath", "./model/default.model")
-        config_ceph = config.get("ceph", dict())
-        self.CEPH_ACCESS_KEY = config_ceph.get("access_key")
-        self.CEPH_SECRET_KEY = config_ceph.get("secret_key")
-        self.CEPH_HOST = config_ceph.get("host")
-        self.CEPH_PORT = config_ceph.get("port", 8773)
-        self.CEPH_IS_SECURE = config_ceph.get("is_secure", False)
-        self.CEPH_BUCKET_NAME = config_ceph.get("bucket")
-        # TODO: AWS
-        # TODO: GCS
+        if self.MODEL_MODE_ENUM == ModelModeEnum.LOCAL:
+            config_model_mode = config_model.get(model_mode, dict())
+            self.MODEL_FILE_PATH = config_model_mode.get("filepath", "model/default.model")
+        elif self.MODEL_MODE_ENUM == ModelModeEnum.CEPH_S3:
+            config_model_mode = config_model.get(model_mode, dict())
+            self.MODEL_FILE_PATH = config_model_mode.get("filepath", "model/default.model")
+            self.CEPH_ACCESS_KEY = config_model_mode.get("access_key")
+            self.CEPH_SECRET_KEY = config_model_mode.get("secret_key")
+            self.CEPH_HOST = config_model_mode.get("host")
+            self.CEPH_PORT = config_model_mode.get("port", self.__CEPH_DEFAULT_PORT)
+            self.CEPH_IS_SECURE = config_model_mode.get("is_secure", False)
+            self.CEPH_BUCKET_NAME = config_model_mode.get("bucket")
+        else:
+            # TODO: AWS
+            # TODO: GCS
+            raise ValueError("'{}' is not supported as ModelModeEnum".format(model_mode))
 
     def __load_from_env(self):
         self.DEBUG_MODE = os.getenv("REKCURD_DEBUG_MODE", "True").lower() == 'true'
         self.APPLICATION_NAME = os.getenv("REKCURD_APPLICATION_NAME")
         self.SERVICE_NAME = os.getenv("REKCURD_SERVICE_NAME")
-        self.SERVICE_PORT = int(os.getenv("REKCURD_SERVICE_PORT", "5000"))
+        self.SERVICE_PORT = int(os.getenv("REKCURD_SERVICE_PORT", "{}".format(self.__SERVICE_DEFAULT_PORT)))
         self.SERVICE_LEVEL = os.getenv("REKCURD_SERVICE_LEVEL")
         model_mode = os.getenv("REKCURD_MODEL_MODE")
         self.MODEL_MODE_ENUM = ModelModeEnum.to_Enum(model_mode)
@@ -122,7 +130,7 @@ class RekcurdConfig:
         self.CEPH_ACCESS_KEY = os.getenv("REKCURD_CEPH_ACCESS_KEY")
         self.CEPH_SECRET_KEY = os.getenv("REKCURD_CEPH_SECRET_KEY")
         self.CEPH_HOST = os.getenv("REKCURD_CEPH_HOST")
-        self.CEPH_PORT = int(os.getenv("REKCURD_CEPH_PORT", "8773"))
+        self.CEPH_PORT = int(os.getenv("REKCURD_CEPH_PORT", str(self.__CEPH_DEFAULT_PORT)))
         self.CEPH_IS_SECURE = os.getenv("REKCURD_CEPH_IS_SECURE", "False").lower() == 'true'
         self.CEPH_BUCKET_NAME = os.getenv("REKCURD_CEPH_BUCKET_NAME")
         # TODO: AWS
