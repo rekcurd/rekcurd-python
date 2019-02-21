@@ -50,7 +50,9 @@ class RekcurdConfig:
     CEPH_PORT: int = __CEPH_DEFAULT_PORT
     CEPH_IS_SECURE: bool = None
     CEPH_BUCKET_NAME: str = None
-    # TODO: AWS
+    AWS_ACCESS_KEY: str = None
+    AWS_SECRET_KEY: str = None
+    AWS_BUCKET_NAME: str = None
     # TODO: GCS
 
     def __init__(self, config_file: str = None):
@@ -67,7 +69,8 @@ class RekcurdConfig:
             model_filepath: str = None, ceph_access_key: str = None,
             ceph_secret_key: str = None, ceph_host: str = None,
             ceph_port: int = None, ceph_is_secure: bool = None,
-            ceph_bucket_name: str = None,
+            ceph_bucket_name: str = None, aws_access_key: str = None,
+            aws_secret_key: str = None, aws_bucket_name: str = None,
             **options):
         self.DEBUG_MODE = debug_mode if debug_mode is not None else self.DEBUG_MODE
         self.APPLICATION_NAME = application_name or self.APPLICATION_NAME
@@ -83,7 +86,9 @@ class RekcurdConfig:
         self.CEPH_PORT = int(ceph_port or self.CEPH_PORT)
         self.CEPH_IS_SECURE = ceph_is_secure if ceph_is_secure is not None else self.CEPH_IS_SECURE
         self.CEPH_BUCKET_NAME = ceph_bucket_name or self.CEPH_BUCKET_NAME
-        # TODO: AWS
+        self.AWS_ACCESS_KEY = aws_access_key or self.AWS_ACCESS_KEY
+        self.AWS_SECRET_KEY = aws_secret_key or self.AWS_SECRET_KEY
+        self.AWS_BUCKET_NAME = aws_bucket_name or self.AWS_BUCKET_NAME
         # TODO: GCS
 
     def __load_from_file(self, config_file: str):
@@ -113,8 +118,13 @@ class RekcurdConfig:
             self.CEPH_PORT = config_model_mode.get("port", self.__CEPH_DEFAULT_PORT)
             self.CEPH_IS_SECURE = config_model_mode.get("is_secure", False)
             self.CEPH_BUCKET_NAME = config_model_mode.get("bucket")
+        elif self.MODEL_MODE_ENUM == ModelModeEnum.AWS_S3:
+            config_model_mode = config_model.get(model_mode, dict())
+            self.MODEL_FILE_PATH = config_model_mode.get("filepath", "model/default.model")
+            self.AWS_ACCESS_KEY = config_model_mode.get("access_key")
+            self.AWS_SECRET_KEY = config_model_mode.get("secret_key")
+            self.AWS_BUCKET_NAME = config_model_mode.get("bucket")
         else:
-            # TODO: AWS
             # TODO: GCS
             raise ValueError("'{}' is not supported as ModelModeEnum".format(model_mode))
 
@@ -133,5 +143,7 @@ class RekcurdConfig:
         self.CEPH_PORT = int(os.getenv("REKCURD_CEPH_PORT", str(self.__CEPH_DEFAULT_PORT)))
         self.CEPH_IS_SECURE = os.getenv("REKCURD_CEPH_IS_SECURE", "False").lower() == 'true'
         self.CEPH_BUCKET_NAME = os.getenv("REKCURD_CEPH_BUCKET_NAME")
-        # TODO: AWS
+        self.AWS_ACCESS_KEY = os.getenv("REKCURD_AWS_ACCESS_KEY")
+        self.AWS_SECRET_KEY = os.getenv("REKCURD_AWS_SECRET_KEY")
+        self.AWS_BUCKET_NAME = os.getenv("REKCURD_AWS_BUCKET_NAME")
         # TODO: GCS

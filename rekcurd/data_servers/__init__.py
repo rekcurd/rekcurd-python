@@ -11,6 +11,7 @@ from rekcurd.utils import RekcurdConfig, ModelModeEnum
 from .data_handler import DataHandler, convert_to_valid_path
 from .local_handler import LocalHandler
 from .ceph_handler import CephHandler
+from .aws_s3_handler import AwsS3Handler
 
 
 class DataServer(object):
@@ -28,6 +29,8 @@ class DataServer(object):
             self._api_handler = LocalHandler(config)
         elif config.MODEL_MODE_ENUM == ModelModeEnum.CEPH_S3:
             self._api_handler = CephHandler(config)
+        elif config.MODEL_MODE_ENUM == ModelModeEnum.AWS_S3:
+            self._api_handler = AwsS3Handler(config)
         else:
             raise ValueError("Invalid ModelModeEnum value.")
 
