@@ -130,7 +130,7 @@ class RekcurdConfig:
         self.CEPH_ACCESS_KEY = os.getenv("REKCURD_CEPH_ACCESS_KEY")
         self.CEPH_SECRET_KEY = os.getenv("REKCURD_CEPH_SECRET_KEY")
         self.CEPH_HOST = os.getenv("REKCURD_CEPH_HOST")
-        self.CEPH_PORT = int(os.getenv("REKCURD_CEPH_PORT", "{}".format(self.__CEPH_DEFAULT_PORT)))
+        self.CEPH_PORT = int(os.getenv("REKCURD_CEPH_PORT", str(self.__CEPH_DEFAULT_PORT)))
         self.CEPH_IS_SECURE = os.getenv("REKCURD_CEPH_IS_SECURE", "False").lower() == 'true'
         self.CEPH_BUCKET_NAME = os.getenv("REKCURD_CEPH_BUCKET_NAME")
         # TODO: AWS
