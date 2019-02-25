@@ -2,6 +2,7 @@
 
 
 import os
+import uuid
 import yaml
 
 from enum import Enum
@@ -40,7 +41,7 @@ class RekcurdConfig:
     KUBERNETES_MODE: str = None
     DEBUG_MODE: bool = None
     APPLICATION_NAME: str = None
-    SERVICE_NAME: str = None
+    SERVICE_ID: str = None
     SERVICE_INSECURE_HOST: str = __SERVICE_DEFAULT_HOST
     SERVICE_INSECURE_PORT: int = __SERVICE_DEFAULT_PORT
     SERVICE_LEVEL: str = None
@@ -76,7 +77,6 @@ class RekcurdConfig:
             **options):
         self.DEBUG_MODE = debug_mode if debug_mode is not None else self.DEBUG_MODE
         self.APPLICATION_NAME = application_name or self.APPLICATION_NAME
-        self.SERVICE_NAME = self.APPLICATION_NAME
         self.SERVICE_INSECURE_HOST = service_insecure_host or self.SERVICE_INSECURE_HOST
         self.SERVICE_INSECURE_PORT = int(service_insecure_port or self.SERVICE_INSECURE_PORT)
         self.SERVICE_LEVEL = service_level or self.SERVICE_LEVEL
@@ -103,7 +103,7 @@ class RekcurdConfig:
         self.DEBUG_MODE = config.get("debug", True)
         config_app = config.get("app", dict())
         self.APPLICATION_NAME = config_app.get("name", "sample")
-        self.SERVICE_NAME = self.APPLICATION_NAME
+        self.SERVICE_ID = uuid.uuid4().hex
         self.SERVICE_INSECURE_HOST = config_app.get("host", self.__SERVICE_DEFAULT_HOST)
         self.SERVICE_INSECURE_PORT = config_app.get("port", self.__SERVICE_DEFAULT_PORT)
         self.SERVICE_LEVEL = config_app.get("service_level", "development")
@@ -135,7 +135,7 @@ class RekcurdConfig:
     def __load_from_env(self):
         self.DEBUG_MODE = os.getenv("REKCURD_DEBUG_MODE", "True").lower() == 'true'
         self.APPLICATION_NAME = os.getenv("REKCURD_APPLICATION_NAME")
-        self.SERVICE_NAME = os.getenv("REKCURD_SERVICE_NAME")
+        self.SERVICE_ID = os.getenv("REKCURD_SERVICE_ID")
         self.SERVICE_INSECURE_HOST = os.getenv("REKCURD_SERVICE_INSECURE_HOST", self.__SERVICE_DEFAULT_HOST)
         self.SERVICE_INSECURE_PORT = int(os.getenv("REKCURD_SERVICE_INSECURE_PORT", self.__SERVICE_DEFAULT_PORT))
         self.SERVICE_LEVEL = os.getenv("REKCURD_SERVICE_LEVEL")
