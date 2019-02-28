@@ -32,7 +32,8 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
     def __init__(self, app: Rekcurd, predictor: object):
         self.app = app
         self.predictor = predictor
-        self.logger = app.service_logger
+        self.system_logger = app.system_logger
+        self.service_logger = app.service_logger
 
     def Process(self,
                 request: RekcurdInput,
@@ -49,7 +50,8 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
         single_output = self.app.get_type_output() in [self.Type.STRING, self.Type.BYTES]
         try:
             result = self.app.predict(self.predictor, input, ioption)
-        except:
+        except Exception as e:
+            self.system_logger.error(str(e))
             if single_output:
                 if isinstance(response, rekcurd_pb2.StringOutput):
                     label = "None"
@@ -68,14 +70,19 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
                 else:
                     label = None
                 result = PredictResult(label=label, score=[0.0], option={})
-        if single_output:
-            response.output = result.label
-            response.score = result.score
-        else:
-            response.output.extend(result.label)
-            response.score.extend(result.score)
-        response.option.val = result.option
-        self.logger.emit(request, response, ioption.get('suppress_log_inout', False))
+
+        try:
+            if single_output:
+                response.output = result.label
+                response.score = result.score
+            else:
+                response.output.extend(result.label)
+                response.score.extend(result.score)
+            response.option.val = result.option
+        except Exception as e:
+            self.system_logger.error(str(e))
+
+        self.service_logger.emit(request, response, ioption.get('suppress_log_inout', False))
         return response
 
     def Predict_String_String(self,
