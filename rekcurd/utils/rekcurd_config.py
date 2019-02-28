@@ -34,13 +34,15 @@ class RekcurdConfig:
     """
     Rekcurd configurations.
     """
+    __SERVICE_DEFAULT_HOST = "127.0.0.1"
     __SERVICE_DEFAULT_PORT = 5000
     __CEPH_DEFAULT_PORT = 8773
     KUBERNETES_MODE: str = None
     DEBUG_MODE: bool = None
     APPLICATION_NAME: str = None
     SERVICE_NAME: str = None
-    SERVICE_PORT: int = __SERVICE_DEFAULT_PORT
+    SERVICE_INSECURE_HOST: str = __SERVICE_DEFAULT_HOST
+    SERVICE_INSECURE_PORT: int = __SERVICE_DEFAULT_PORT
     SERVICE_LEVEL: str = None
     MODEL_MODE_ENUM: ModelModeEnum = None
     MODEL_FILE_PATH: str = None
@@ -63,8 +65,8 @@ class RekcurdConfig:
             self.__load_from_env()
 
     def set_configurations(
-            self, debug_mode: bool = None,
-            application_name: str = None, service_port: int = None,
+            self, debug_mode: bool = None, application_name: str = None,
+            service_insecure_host: str = None, service_insecure_port: int = None,
             service_level: str = None, model_mode: str = None,
             model_filepath: str = None, ceph_access_key: str = None,
             ceph_secret_key: str = None, ceph_host: str = None,
@@ -75,7 +77,8 @@ class RekcurdConfig:
         self.DEBUG_MODE = debug_mode if debug_mode is not None else self.DEBUG_MODE
         self.APPLICATION_NAME = application_name or self.APPLICATION_NAME
         self.SERVICE_NAME = self.APPLICATION_NAME
-        self.SERVICE_PORT = int(service_port or self.SERVICE_PORT)
+        self.SERVICE_INSECURE_HOST = service_insecure_host or self.SERVICE_INSECURE_HOST
+        self.SERVICE_INSECURE_PORT = int(service_insecure_port or self.SERVICE_INSECURE_PORT)
         self.SERVICE_LEVEL = service_level or self.SERVICE_LEVEL
         if model_mode is not None:
             self.MODEL_MODE_ENUM = ModelModeEnum.to_Enum(model_mode)
@@ -101,7 +104,8 @@ class RekcurdConfig:
         config_app = config.get("app", dict())
         self.APPLICATION_NAME = config_app.get("name", "sample")
         self.SERVICE_NAME = self.APPLICATION_NAME
-        self.SERVICE_PORT = config_app.get("port", self.__SERVICE_DEFAULT_PORT)
+        self.SERVICE_INSECURE_HOST = config_app.get("host", self.__SERVICE_DEFAULT_HOST)
+        self.SERVICE_INSECURE_PORT = config_app.get("port", self.__SERVICE_DEFAULT_PORT)
         self.SERVICE_LEVEL = config_app.get("service_level", "development")
         config_model = config.get("model", dict())
         model_mode = config_model.get("mode", "local")
@@ -132,7 +136,8 @@ class RekcurdConfig:
         self.DEBUG_MODE = os.getenv("REKCURD_DEBUG_MODE", "True").lower() == 'true'
         self.APPLICATION_NAME = os.getenv("REKCURD_APPLICATION_NAME")
         self.SERVICE_NAME = os.getenv("REKCURD_SERVICE_NAME")
-        self.SERVICE_PORT = int(os.getenv("REKCURD_SERVICE_PORT", "{}".format(self.__SERVICE_DEFAULT_PORT)))
+        self.SERVICE_INSECURE_HOST = os.getenv("REKCURD_SERVICE_INSECURE_HOST", self.__SERVICE_DEFAULT_HOST)
+        self.SERVICE_INSECURE_PORT = int(os.getenv("REKCURD_SERVICE_INSECURE_PORT", self.__SERVICE_DEFAULT_PORT))
         self.SERVICE_LEVEL = os.getenv("REKCURD_SERVICE_LEVEL")
         model_mode = os.getenv("REKCURD_MODEL_MODE")
         self.MODEL_MODE_ENUM = ModelModeEnum.to_Enum(model_mode)
