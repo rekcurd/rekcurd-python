@@ -121,6 +121,7 @@ class Rekcurd(metaclass=ABCMeta):
             self._system_logger = JsonSystemLogger(config=self.config)
         if self._service_logger is None:
             self._service_logger = JsonServiceLogger(config=self.config)
+        self.system_logger.info("Service start.")
         _host = "127.0.0.1"
         _port = 5000
         _max_workers = 1
@@ -129,7 +130,9 @@ class Rekcurd(metaclass=ABCMeta):
         max_workers = int(max_workers or _max_workers)
 
         try:
+            self.system_logger.info("Download model.")
             model_path = self.data_server.get_model_path()
+            self.system_logger.info("Initialize predictor.")
             predictor = self.load_model(model_path)
             if predictor is None:
                 raise Exception("Error: No predictor found. Need your \"Rekcurd\" implementation.")
