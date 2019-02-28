@@ -6,7 +6,8 @@ debug: True
 ## Application parameters.
 app:
   name: RekcurdAppTemplate          # This must be unique.
-  port: 5000                        # Service port. Default "5000"
+  host: 127.0.0.1                   # Service insecure host. Default "127.0.0.1"
+  port: 5000                        # Service insecure port. Default "5000"
   service_level: development        # Service level. One of [development/beta/staging/sandbox/production]. Default "development"
 
 ## Machine learning model access parameters.

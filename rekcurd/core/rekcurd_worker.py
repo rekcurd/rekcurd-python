@@ -110,8 +110,10 @@ class Rekcurd(metaclass=ABCMeta):
 
         if self.config is None:
             self.config = RekcurdConfig()
-        if port and "service_port" in options:
-            options["service_port"] = port
+        if host and "service_insecure_host" in options:
+            options["service_insecure_host"] = host
+        if port and "service_insecure_port" in options:
+            options["service_insecure_port"] = port
         self.config.set_configurations(**options)
 
         self.data_server = DataServer(self.config)
@@ -122,8 +124,8 @@ class Rekcurd(metaclass=ABCMeta):
         _host = "127.0.0.1"
         _port = 5000
         _max_workers = 1
-        host = host or _host
-        port = int(port or self.config.SERVICE_PORT or _port)
+        host = host or self.config.SERVICE_INSECURE_HOST or _host
+        port = int(port or self.config.SERVICE_INSECURE_PORT or _port)
         max_workers = int(max_workers or _max_workers)
 
         try:
