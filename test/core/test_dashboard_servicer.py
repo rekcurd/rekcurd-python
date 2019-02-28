@@ -78,7 +78,6 @@ class RekcurdWorkerServicerTest(unittest.TestCase):
         response, trailing_metadata, code, details = rpc.termination()
         self.assertIs(code, StatusCode.OK)
         self.assertEqual(response.application_name, 'test')
-        self.assertEqual(response.service_name, 'test')
         self.assertEqual(response.service_level, 'development')
 
     @patch_predictor()

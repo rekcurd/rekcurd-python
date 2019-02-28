@@ -105,7 +105,7 @@ class RekcurdDashboardServicer(rekcurd_pb2_grpc.RekcurdDashboardServicer):
         """
         return rekcurd_pb2.ServiceInfoResponse(
             application_name=self.app.config.APPLICATION_NAME,
-            service_name=self.app.config.SERVICE_NAME,
+            service_name=self.app.config.SERVICE_ID,
             service_level=self.app.config.SERVICE_LEVEL)
 
     @error_handling(rekcurd_pb2.ModelResponse(status=0, message='Error: Uploading model file.'))
