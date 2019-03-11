@@ -29,11 +29,10 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
         ARRAY_FLOAT = 4
         ARRAY_STRING = 5
 
-    def __init__(self, app: Rekcurd, predictor: object):
-        self.app = app
-        self.predictor = predictor
-        self.system_logger = app.system_logger
-        self.service_logger = app.service_logger
+    def __init__(self, rekcurd_pack: list):
+        self.rekcurd_pack = rekcurd_pack
+        self.system_logger = rekcurd_pack[0].system_logger
+        self.service_logger = rekcurd_pack[0].service_logger
 
     def Process(self,
                 request: RekcurdInput,
@@ -47,9 +46,9 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
         except:
             ioption = {request.option.val: request.option.val}
 
-        single_output = self.app.get_type_output() in [self.Type.STRING, self.Type.BYTES]
+        single_output = self.rekcurd_pack[0].get_type_output() in [self.Type.STRING, self.Type.BYTES]
         try:
-            result = self.app.predict(self.predictor, input, ioption)
+            result = self.rekcurd_pack[0].predict(self.rekcurd_pack[1], input, ioption)
         except Exception as e:
             self.system_logger.error(str(e))
             if single_output:
@@ -90,7 +89,7 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
                               context: ServicerContext
                               ) -> rekcurd_pb2.StringOutput:
         response = rekcurd_pb2.StringOutput()
-        self.app.set_type(self.Type.STRING, self.Type.STRING)
+        self.rekcurd_pack[0].set_type(self.Type.STRING, self.Type.STRING)
         return self.Process(request, context, response)
 
     def Predict_String_Bytes(self,
@@ -98,7 +97,7 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
                              context: ServicerContext
                              ) -> rekcurd_pb2.BytesOutput:
         response = rekcurd_pb2.BytesOutput()
-        self.app.set_type(self.Type.STRING, self.Type.BYTES)
+        self.rekcurd_pack[0].set_type(self.Type.STRING, self.Type.BYTES)
         yield self.Process(request, context, response)
 
     def Predict_String_ArrInt(self,
@@ -106,7 +105,7 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
                               context: ServicerContext
                               ) -> rekcurd_pb2.ArrIntOutput:
         response = rekcurd_pb2.ArrIntOutput()
-        self.app.set_type(self.Type.STRING, self.Type.ARRAY_INT)
+        self.rekcurd_pack[0].set_type(self.Type.STRING, self.Type.ARRAY_INT)
         return self.Process(request, context, response)
 
     def Predict_String_ArrFloat(self,
@@ -114,7 +113,7 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
                                 context: ServicerContext
                                 ) -> rekcurd_pb2.ArrFloatOutput:
         response = rekcurd_pb2.ArrFloatOutput()
-        self.app.set_type(self.Type.STRING, self.Type.ARRAY_FLOAT)
+        self.rekcurd_pack[0].set_type(self.Type.STRING, self.Type.ARRAY_FLOAT)
         return self.Process(request, context, response)
 
     def Predict_String_ArrString(self,
@@ -122,7 +121,7 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
                                  context: ServicerContext
                                  ) -> rekcurd_pb2.ArrStringOutput:
         response = rekcurd_pb2.ArrStringOutput()
-        self.app.set_type(self.Type.STRING, self.Type.ARRAY_STRING)
+        self.rekcurd_pack[0].set_type(self.Type.STRING, self.Type.ARRAY_STRING)
         return self.Process(request, context, response)
 
     def Predict_Bytes_String(self,
@@ -131,7 +130,7 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
                              ) -> rekcurd_pb2.StringOutput:
         for request in request_iterator:
             response = rekcurd_pb2.StringOutput()
-            self.app.set_type(self.Type.BYTES, self.Type.STRING)
+            self.rekcurd_pack[0].set_type(self.Type.BYTES, self.Type.STRING)
             return self.Process(request, context, response)
 
     def Predict_Bytes_Bytes(self,
@@ -140,7 +139,7 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
                             ) -> rekcurd_pb2.BytesOutput:
         for request in request_iterator:
             response = rekcurd_pb2.BytesOutput()
-            self.app.set_type(self.Type.BYTES, self.Type.BYTES)
+            self.rekcurd_pack[0].set_type(self.Type.BYTES, self.Type.BYTES)
             yield self.Process(request, context, response)
 
     def Predict_Bytes_ArrInt(self,
@@ -149,7 +148,7 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
                              ) -> rekcurd_pb2.ArrIntOutput:
         for request in request_iterator:
             response = rekcurd_pb2.ArrIntOutput()
-            self.app.set_type(self.Type.BYTES, self.Type.ARRAY_INT)
+            self.rekcurd_pack[0].set_type(self.Type.BYTES, self.Type.ARRAY_INT)
             return self.Process(request, context, response)
 
     def Predict_Bytes_ArrFloat(self,
@@ -158,7 +157,7 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
                                ) -> rekcurd_pb2.ArrFloatOutput:
         for request in request_iterator:
             response = rekcurd_pb2.ArrFloatOutput()
-            self.app.set_type(self.Type.BYTES, self.Type.ARRAY_FLOAT)
+            self.rekcurd_pack[0].set_type(self.Type.BYTES, self.Type.ARRAY_FLOAT)
             return self.Process(request, context, response)
 
     def Predict_Bytes_ArrString(self,
@@ -167,7 +166,7 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
                                 ) -> rekcurd_pb2.ArrStringOutput:
         for request in request_iterator:
             response = rekcurd_pb2.ArrStringOutput()
-            self.app.set_type(self.Type.BYTES, self.Type.ARRAY_STRING)
+            self.rekcurd_pack[0].set_type(self.Type.BYTES, self.Type.ARRAY_STRING)
             return self.Process(request, context, response)
 
     def Predict_ArrInt_String(self,
@@ -175,7 +174,7 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
                               context: ServicerContext
                               ) -> rekcurd_pb2.StringOutput:
         response = rekcurd_pb2.StringOutput()
-        self.app.set_type(self.Type.ARRAY_INT, self.Type.STRING)
+        self.rekcurd_pack[0].set_type(self.Type.ARRAY_INT, self.Type.STRING)
         return self.Process(request, context, response)
 
     def Predict_ArrInt_Bytes(self,
@@ -183,7 +182,7 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
                              context: ServicerContext
                              ) -> rekcurd_pb2.BytesOutput:
         response = rekcurd_pb2.BytesOutput()
-        self.app.set_type(self.Type.ARRAY_INT, self.Type.BYTES)
+        self.rekcurd_pack[0].set_type(self.Type.ARRAY_INT, self.Type.BYTES)
         yield self.Process(request, context, response)
 
     def Predict_ArrInt_ArrInt(self,
@@ -191,7 +190,7 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
                               context: ServicerContext
                               ) -> rekcurd_pb2.ArrIntOutput:
         response = rekcurd_pb2.ArrIntOutput()
-        self.app.set_type(self.Type.ARRAY_INT, self.Type.ARRAY_INT)
+        self.rekcurd_pack[0].set_type(self.Type.ARRAY_INT, self.Type.ARRAY_INT)
         return self.Process(request, context, response)
 
     def Predict_ArrInt_ArrFloat(self,
@@ -199,7 +198,7 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
                                 context: ServicerContext
                                 ) -> rekcurd_pb2.ArrFloatOutput:
         response = rekcurd_pb2.ArrFloatOutput()
-        self.app.set_type(self.Type.ARRAY_INT, self.Type.ARRAY_FLOAT)
+        self.rekcurd_pack[0].set_type(self.Type.ARRAY_INT, self.Type.ARRAY_FLOAT)
         return self.Process(request, context, response)
 
     def Predict_ArrInt_ArrString(self,
@@ -207,7 +206,7 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
                                  context: ServicerContext
                                  ) -> rekcurd_pb2.ArrStringOutput:
         response = rekcurd_pb2.ArrStringOutput()
-        self.app.set_type(self.Type.ARRAY_INT, self.Type.ARRAY_STRING)
+        self.rekcurd_pack[0].set_type(self.Type.ARRAY_INT, self.Type.ARRAY_STRING)
         return self.Process(request, context, response)
 
     def Predict_ArrFloat_String(self,
@@ -215,7 +214,7 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
                                 context: ServicerContext
                                 ) -> rekcurd_pb2.StringOutput:
         response = rekcurd_pb2.StringOutput()
-        self.app.set_type(self.Type.ARRAY_FLOAT, self.Type.STRING)
+        self.rekcurd_pack[0].set_type(self.Type.ARRAY_FLOAT, self.Type.STRING)
         return self.Process(request, context, response)
 
     def Predict_ArrFloat_Bytes(self,
@@ -223,7 +222,7 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
                                context: ServicerContext
                                ) -> rekcurd_pb2.BytesOutput:
         response = rekcurd_pb2.BytesOutput()
-        self.app.set_type(self.Type.ARRAY_FLOAT, self.Type.BYTES)
+        self.rekcurd_pack[0].set_type(self.Type.ARRAY_FLOAT, self.Type.BYTES)
         yield self.Process(request, context, response)
 
     def Predict_ArrFloat_ArrInt(self,
@@ -231,7 +230,7 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
                                 context: ServicerContext
                                 ) -> rekcurd_pb2.ArrIntOutput:
         response = rekcurd_pb2.ArrIntOutput()
-        self.app.set_type(self.Type.ARRAY_FLOAT, self.Type.ARRAY_INT)
+        self.rekcurd_pack[0].set_type(self.Type.ARRAY_FLOAT, self.Type.ARRAY_INT)
         return self.Process(request, context, response)
 
     def Predict_ArrFloat_ArrFloat(self,
@@ -239,7 +238,7 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
                                   context: ServicerContext
                                   ) -> rekcurd_pb2.ArrFloatOutput:
         response = rekcurd_pb2.ArrFloatOutput()
-        self.app.set_type(self.Type.ARRAY_FLOAT, self.Type.ARRAY_FLOAT)
+        self.rekcurd_pack[0].set_type(self.Type.ARRAY_FLOAT, self.Type.ARRAY_FLOAT)
         return self.Process(request, context, response)
 
     def Predict_ArrFloat_ArrString(self,
@@ -247,7 +246,7 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
                                    context: ServicerContext
                                    ) -> rekcurd_pb2.ArrStringOutput:
         response = rekcurd_pb2.ArrStringOutput()
-        self.app.set_type(self.Type.ARRAY_FLOAT, self.Type.ARRAY_STRING)
+        self.rekcurd_pack[0].set_type(self.Type.ARRAY_FLOAT, self.Type.ARRAY_STRING)
         return self.Process(request, context, response)
 
     def Predict_ArrString_String(self,
@@ -255,7 +254,7 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
                                  context: ServicerContext
                                  ) -> rekcurd_pb2.StringOutput:
         response = rekcurd_pb2.StringOutput()
-        self.app.set_type(self.Type.ARRAY_STRING, self.Type.STRING)
+        self.rekcurd_pack[0].set_type(self.Type.ARRAY_STRING, self.Type.STRING)
         return self.Process(request, context, response)
 
     def Predict_ArrString_Bytes(self,
@@ -263,7 +262,7 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
                                 context: ServicerContext
                                 ) -> rekcurd_pb2.BytesOutput:
         response = rekcurd_pb2.BytesOutput()
-        self.app.set_type(self.Type.ARRAY_STRING, self.Type.BYTES)
+        self.rekcurd_pack[0].set_type(self.Type.ARRAY_STRING, self.Type.BYTES)
         yield self.Process(request, context, response)
 
     def Predict_ArrString_ArrInt(self,
@@ -271,7 +270,7 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
                                  context: ServicerContext
                                  ) -> rekcurd_pb2.ArrIntOutput:
         response = rekcurd_pb2.ArrIntOutput()
-        self.app.set_type(self.Type.ARRAY_STRING, self.Type.ARRAY_INT)
+        self.rekcurd_pack[0].set_type(self.Type.ARRAY_STRING, self.Type.ARRAY_INT)
         return self.Process(request, context, response)
 
     def Predict_ArrString_ArrFloat(self,
@@ -279,7 +278,7 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
                                    context: ServicerContext
                                    ) -> rekcurd_pb2.ArrFloatOutput:
         response = rekcurd_pb2.ArrFloatOutput()
-        self.app.set_type(self.Type.ARRAY_STRING, self.Type.ARRAY_FLOAT)
+        self.rekcurd_pack[0].set_type(self.Type.ARRAY_STRING, self.Type.ARRAY_FLOAT)
         return self.Process(request, context, response)
 
     def Predict_ArrString_ArrString(self,
@@ -287,5 +286,5 @@ class RekcurdWorkerServicer(rekcurd_pb2_grpc.RekcurdWorkerServicer):
                                     context: ServicerContext
                                     ) -> rekcurd_pb2.ArrStringOutput:
         response = rekcurd_pb2.ArrStringOutput()
-        self.app.set_type(self.Type.ARRAY_STRING, self.Type.ARRAY_STRING)
+        self.rekcurd_pack[0].set_type(self.Type.ARRAY_STRING, self.Type.ARRAY_STRING)
         return self.Process(request, context, response)

@@ -100,7 +100,7 @@ class RekcurdWorkerServicerTest(unittest.TestCase):
         app.service_logger = JsonServiceLogger(config=app.config)
         self._real_time = grpc_testing.strict_real_time()
         self._fake_time = grpc_testing.strict_fake_time(time.time())
-        servicer = RekcurdWorkerServicer(app=app, predictor=None)
+        servicer = RekcurdWorkerServicer([app, None])
         descriptors_to_services = {
             target_service: servicer
         }

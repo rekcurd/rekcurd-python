@@ -75,10 +75,9 @@ class RekcurdDashboardServicer(rekcurd_pb2_grpc.RekcurdDashboardServicer):
     CHUNK_SIZE = 100
     BYTE_LIMIT = 4190000
 
-    def __init__(self, app: Rekcurd, predictor: object):
-        self.app = app
-        self.predictor = predictor
-        self.logger = app.system_logger
+    def __init__(self, rekcurd_pack: list):
+        self.rekcurd_pack = rekcurd_pack
+        self.logger = rekcurd_pack[0].system_logger
 
     def on_error(self, error: Exception):
         """ Postprocessing on error
@@ -103,10 +102,11 @@ class RekcurdDashboardServicer(rekcurd_pb2_grpc.RekcurdDashboardServicer):
         :param context:
         :return:
         """
+        self.logger.info("Run ServiceInfo.")
         return rekcurd_pb2.ServiceInfoResponse(
-            application_name=self.app.config.APPLICATION_NAME,
-            service_name=self.app.config.SERVICE_ID,
-            service_level=self.app.config.SERVICE_LEVEL)
+            application_name=self.rekcurd_pack[0].config.APPLICATION_NAME,
+            service_name=self.rekcurd_pack[0].config.SERVICE_ID,
+            service_level=self.rekcurd_pack[0].config.SERVICE_LEVEL)
 
     @error_handling(rekcurd_pb2.ModelResponse(status=0, message='Error: Uploading model file.'))
     def UploadModel(self,
@@ -119,7 +119,8 @@ class RekcurdDashboardServicer(rekcurd_pb2_grpc.RekcurdDashboardServicer):
         :param context:
         :return:
         """
-        self.app.data_server.upload_model(request_iterator)
+        self.logger.info("Run UploadModel.")
+        self.rekcurd_pack[0].data_server.upload_model(request_iterator)
         return rekcurd_pb2.ModelResponse(status=1,
                                          message='Success: Uploading model file.')
 
@@ -134,9 +135,10 @@ class RekcurdDashboardServicer(rekcurd_pb2_grpc.RekcurdDashboardServicer):
         :param context:
         :return:
         """
+        self.logger.info("Run SwitchModel.")
         filepath = request.path
-        local_filepath = self.app.data_server.switch_model(filepath)
-        self.predictor = self.app.load_model(local_filepath)
+        local_filepath = self.rekcurd_pack[0].data_server.switch_model(filepath)
+        self.rekcurd_pack[1] = self.rekcurd_pack[0].load_model(local_filepath)
         return rekcurd_pb2.ModelResponse(status=1,
                                          message='Success: Switching model file.')
 
@@ -151,12 +153,13 @@ class RekcurdDashboardServicer(rekcurd_pb2_grpc.RekcurdDashboardServicer):
         :param context:
         :return:
         """
+        self.logger.info("Run EvaluateModel.")
         first_req = next(request_iterator)
         data_path = first_req.data_path
         result_path = first_req.result_path
 
-        local_data_path = self.app.data_server.get_evaluation_data_path(data_path)
-        result, details = self.app.evaluate(self.predictor, local_data_path)
+        local_data_path = self.rekcurd_pack[0].data_server.get_evaluation_data_path(data_path)
+        result, details = self.rekcurd_pack[0].evaluate(self.rekcurd_pack[1], local_data_path)
         label_ios = [self.get_io_by_type(l) for l in result.label]
         metrics = rekcurd_pb2.EvaluationMetrics(num=result.num,
                                                 accuracy=result.accuracy,
@@ -165,8 +168,8 @@ class RekcurdDashboardServicer(rekcurd_pb2_grpc.RekcurdDashboardServicer):
                                                 fvalue=result.fvalue,
                                                 option=result.option,
                                                 label=label_ios)
-        self.app.data_server.upload_evaluation_result_summary(result, result_path)
-        self.app.data_server.upload_evaluation_result_detail(details, result_path)
+        self.rekcurd_pack[0].data_server.upload_evaluation_result_summary(result, result_path)
+        self.rekcurd_pack[0].data_server.upload_evaluation_result_detail(details, result_path)
         return rekcurd_pb2.EvaluateModelResponse(metrics=metrics)
 
     @error_handling(rekcurd_pb2.UploadEvaluationDataResponse(status=0, message='Error: Uploading evaluation data.'))
@@ -180,7 +183,8 @@ class RekcurdDashboardServicer(rekcurd_pb2_grpc.RekcurdDashboardServicer):
         :param context:
         :return:
         """
-        self.app.data_server.upload_evaluation_data(request_iterator)
+        self.logger.info("Run UploadEvaluationData.")
+        self.rekcurd_pack[0].data_server.upload_evaluation_data(request_iterator)
         return rekcurd_pb2.UploadEvaluationDataResponse(status=1,
                                                         message='Success: Uploading evaluation data.')
 
@@ -191,11 +195,12 @@ class RekcurdDashboardServicer(rekcurd_pb2_grpc.RekcurdDashboardServicer):
                          ) -> Iterator[rekcurd_pb2.EvaluationResultResponse]:
         """ Return saved evaluation result
         """
+        self.logger.info("Run EvaluationResult.")
         data_path = request.data_path
         result_path = request.result_path
-        local_data_path = self.app.data_server.get_evaluation_data_path(data_path)
-        local_result_summary_path = self.app.data_server.get_eval_result_summary(result_path)
-        local_result_detail_path = self.app.data_server.get_eval_result_detail(result_path)
+        local_data_path = self.rekcurd_pack[0].data_server.get_evaluation_data_path(data_path)
+        local_result_summary_path = self.rekcurd_pack[0].data_server.get_eval_result_summary(result_path)
+        local_result_detail_path = self.rekcurd_pack[0].data_server.get_eval_result_detail(result_path)
 
         with open(local_result_detail_path, 'rb') as f:
             result_details = pickle.load(f)
@@ -213,7 +218,7 @@ class RekcurdDashboardServicer(rekcurd_pb2_grpc.RekcurdDashboardServicer):
         detail_chunks = []
         detail_chunk = []
         metrics_size = sys.getsizeof(metrics)
-        for detail in self.app.get_evaluate_detail(local_data_path, result_details):
+        for detail in self.rekcurd_pack[0].get_evaluate_detail(local_data_path, result_details):
             detail_chunk.append(rekcurd_pb2.EvaluationResultResponse.Detail(
                 input=self.get_io_by_type(detail.input),
                 label=self.get_io_by_type(detail.label),
