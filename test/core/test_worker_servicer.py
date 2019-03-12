@@ -8,7 +8,7 @@ import grpc_testing
 from grpc import StatusCode
 
 from rekcurd.protobuf import rekcurd_pb2
-from rekcurd import RekcurdWorkerServicer
+from rekcurd import RekcurdPack, RekcurdWorkerServicer
 from rekcurd.data_servers import DataServer
 from rekcurd.logger import JsonSystemLogger, JsonServiceLogger
 from rekcurd.utils import PredictResult
@@ -100,7 +100,7 @@ class RekcurdWorkerServicerTest(unittest.TestCase):
         app.service_logger = JsonServiceLogger(config=app.config)
         self._real_time = grpc_testing.strict_real_time()
         self._fake_time = grpc_testing.strict_fake_time(time.time())
-        servicer = RekcurdWorkerServicer([app, None])
+        servicer = RekcurdWorkerServicer(RekcurdPack(app, None))
         descriptors_to_services = {
             target_service: servicer
         }

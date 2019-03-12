@@ -141,7 +141,7 @@ class Rekcurd(metaclass=ABCMeta):
             print(str(e))
             return
 
-        rekcurd_pack = [self, predictor]
+        rekcurd_pack = RekcurdPack(self, predictor)
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=max_workers))
         rekcurd_pb2_grpc.add_RekcurdDashboardServicer_to_server(
             RekcurdDashboardServicer(rekcurd_pack), server)
@@ -171,3 +171,9 @@ class Rekcurd(metaclass=ABCMeta):
 
     def get_type_output(self) -> Enum:
         return self.__type_output
+
+
+class RekcurdPack:
+    def __init__(self, app: Rekcurd, predictor: object):
+        self.app = app
+        self.predictor = predictor

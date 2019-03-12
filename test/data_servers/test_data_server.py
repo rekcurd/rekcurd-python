@@ -1,7 +1,6 @@
 import unittest
 
 from rekcurd.protobuf import rekcurd_pb2
-from rekcurd.core.rekcurd_dashboard_servicer import RekcurdDashboardServicer
 from rekcurd.utils import RekcurdConfig, ModelModeEnum
 from rekcurd.data_servers import DataServer
 
