@@ -5,8 +5,8 @@ from unittest.mock import patch, Mock, mock_open
 import grpc_testing
 from grpc import StatusCode
 
+from rekcurd import RekcurdPack, RekcurdDashboardServicer
 from rekcurd.protobuf import rekcurd_pb2
-from rekcurd.core.rekcurd_dashboard_servicer import RekcurdDashboardServicer
 from rekcurd.data_servers import DataServer
 from rekcurd.logger import JsonSystemLogger, JsonServiceLogger
 from rekcurd.utils import EvaluateResult, EvaluateResultDetail, PredictResult, EvaluateDetail
@@ -62,7 +62,7 @@ class RekcurdWorkerServicerTest(unittest.TestCase):
         app.evaluate = Mock(return_value=(eval_result, eval_result_details))
         self._real_time = grpc_testing.strict_real_time()
         self._fake_time = grpc_testing.strict_fake_time(time.time())
-        servicer = RekcurdDashboardServicer(app=app, predictor=None)
+        servicer = RekcurdDashboardServicer(RekcurdPack(app, None))
         descriptors_to_services = {
             target_service: servicer
         }
@@ -241,14 +241,14 @@ class RekcurdWorkerServicerTest(unittest.TestCase):
         rpc.termination()
 
     def test_get_io_by_type(self):
-        servicer = RekcurdDashboardServicer(app=app, predictor=None)
+        servicer = RekcurdDashboardServicer(RekcurdPack(app, None))
         self.assertEqual(servicer.get_io_by_type('test').str.val, ['test'])
         self.assertEqual(servicer.get_io_by_type(['test', 'test2']).str.val, ['test', 'test2'])
         self.assertEqual(servicer.get_io_by_type(2).tensor.val, [2])
         self.assertEqual(servicer.get_io_by_type([2, 3]).tensor.val, [2, 3])
 
     def test_get_score_by_type(self):
-        servicer = RekcurdDashboardServicer(app=app, predictor=None)
+        servicer = RekcurdDashboardServicer(RekcurdPack(app, None))
         score = 4.5
         self.assertEqual(servicer.get_score_by_type(score), [score])
         self.assertEqual(servicer.get_score_by_type([score]), [score])

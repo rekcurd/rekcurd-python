@@ -19,6 +19,6 @@ __project__ = _project.__project__
 __version__ = _version.__version__
 
 from rekcurd.core import (
-    Rekcurd, RekcurdInput, RekcurdOutput,
+    Rekcurd, RekcurdPack, RekcurdInput, RekcurdOutput,
     RekcurdWorkerServicer, RekcurdDashboardServicer
 )

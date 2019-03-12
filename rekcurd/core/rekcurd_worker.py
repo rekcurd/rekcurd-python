@@ -140,11 +140,13 @@ class Rekcurd(metaclass=ABCMeta):
             self.system_logger.error(str(e))
             print(str(e))
             return
+
+        rekcurd_pack = RekcurdPack(self, predictor)
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=max_workers))
         rekcurd_pb2_grpc.add_RekcurdDashboardServicer_to_server(
-            RekcurdDashboardServicer(app=self, predictor=predictor), server)
+            RekcurdDashboardServicer(rekcurd_pack), server)
         rekcurd_pb2_grpc.add_RekcurdWorkerServicer_to_server(
-            RekcurdWorkerServicer(app=self, predictor=predictor), server)
+            RekcurdWorkerServicer(rekcurd_pack), server)
         server.add_insecure_port("{0}:{1}".format(host, port))
         self.system_logger.info("Start rekcurd worker on {0}:{1}".format(host, port))
         server.start()
@@ -169,3 +171,9 @@ class Rekcurd(metaclass=ABCMeta):
 
     def get_type_output(self) -> Enum:
         return self.__type_output
+
+
+class RekcurdPack:
+    def __init__(self, app: Rekcurd, predictor: object):
+        self.app = app
+        self.predictor = predictor
