@@ -55,11 +55,15 @@ class RekcurdWorkerServicerTest(unittest.TestCase):
     """
 
     def setUp(self):
+        def gen_eval():
+            for d in eval_result_details:
+                yield d
+            return eval_result
         app.load_config_file("./test/test-settings.yml")
         app.data_server = DataServer(app.config)
         app.system_logger = JsonSystemLogger(config=app.config)
         app.service_logger = JsonServiceLogger(config=app.config)
-        app.evaluate = Mock(return_value=(eval_result, eval_result_details))
+        app.evaluate = Mock(return_value=gen_eval())
         self._real_time = grpc_testing.strict_real_time()
         self._fake_time = grpc_testing.strict_fake_time(time.time())
         servicer = RekcurdDashboardServicer(RekcurdPack(app, None))
