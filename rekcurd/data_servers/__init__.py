@@ -4,11 +4,11 @@
 import pickle
 
 from pathlib import Path
-from typing import Iterator
+from typing import Iterator, Generator
 
 from rekcurd.protobuf import rekcurd_pb2
-from rekcurd.utils import RekcurdConfig, ModelModeEnum
-from .data_handler import DataHandler, convert_to_valid_path
+from rekcurd.utils import RekcurdConfig, ModelModeEnum, EvaluateResultDetail, EvaluateResult
+from .data_handler import convert_to_valid_path
 from .local_handler import LocalHandler
 from .ceph_handler import CephHandler
 from .aws_s3_handler import AwsS3Handler
@@ -115,19 +115,26 @@ class DataServer(object):
         self._api_handler.upload(filepath, str(local_filepath))
         return str(local_filepath)
 
-    def _upload_evaluation_result(self, data: object, filepath: str, suffix: str):
+    def upload_evaluation_result(self, data_gen: Generator[EvaluateResultDetail, None, EvaluateResult], filepath: str) -> EvaluateResult:
         valid_path = convert_to_valid_path(filepath)
         if filepath != str(valid_path):
             raise Exception(f'Error: Invalid evaluation result file path specified -> {filepath}')
-        local_filepath = Path(self._api_handler.LOCAL_EVAL_DIR, valid_path.name+suffix)
-        local_filepath.parent.mkdir(parents=True, exist_ok=True)
-        with local_filepath.open(mode='wb') as f:
-            pickle.dump(data, f)
-        self._api_handler.upload(filepath+suffix, str(local_filepath))
-        return str(local_filepath)
 
-    def upload_evaluation_result_summary(self, data: object, filepath: str) -> str:
-        return self._upload_evaluation_result(data, filepath, self.__EVALUATE_RESULT)
+        local_dir = Path(self._api_handler.LOCAL_EVAL_DIR)
+        local_dir.mkdir(parents=True, exist_ok=True)
 
-    def upload_evaluation_result_detail(self, data: object, filepath: str) -> str:
-        return self._upload_evaluation_result(data, filepath, self.__EVALUATE_DETAIL)
+        detail_local_filepath = local_dir / (valid_path.name+self.__EVALUATE_DETAIL)
+        with detail_local_filepath.open(mode='wb') as detail_file:
+            try:
+                while True:
+                    pickle.dump(next(data_gen), detail_file)
+            except StopIteration as e:
+                result_local_filepath = local_dir / (valid_path.name+self.__EVALUATE_RESULT)
+                evaluate_result = e.value
+                with result_local_filepath.open(mode='wb') as f:
+                    pickle.dump(evaluate_result, f)
+                self._api_handler.upload(filepath+self.__EVALUATE_RESULT, str(result_local_filepath))
+
+        self._api_handler.upload(filepath+self.__EVALUATE_DETAIL, str(detail_local_filepath))
+
+        return evaluate_result

@@ -4,7 +4,7 @@
 # Example is available on https://github.com/rekcurd/rekcurd-example/tree/master/python/sklearn-digits
 
 
-from typing import Tuple, List, Generator
+from typing import Generator
 
 from rekcurd import Rekcurd
 from rekcurd.utils import PredictInput, PredictResult, EvaluateResult, EvaluateDetail, EvaluateResultDetail
@@ -32,7 +32,7 @@ class RekcurdAppTemplateApp(Rekcurd):
         """
         pass
 
-    def evaluate(self, predictor: object, filepath: str) -> Tuple[EvaluateResult, List[EvaluateResultDetail]]:
+    def evaluate(self, predictor: object, filepath: str) -> Generator[EvaluateResultDetail, None, EvaluateResult]:
         """ override
         TODO: Implement "evaluate"
         :param predictor: Your ML predictor object. object
@@ -50,7 +50,7 @@ class RekcurdAppTemplateApp(Rekcurd):
         """
         pass
 
-    def get_evaluate_detail(self, filepath: str, details: List[EvaluateResultDetail]) -> Generator[EvaluateDetail, None, None]:
+    def get_evaluate_detail(self, filepath: str, details: Generator[EvaluateResultDetail, None, None]) -> Generator[EvaluateDetail, None, None]:
         """ override
         TODO: Implement "get_evaluate_detail"
         :param filepath: Evaluation data file path. str
