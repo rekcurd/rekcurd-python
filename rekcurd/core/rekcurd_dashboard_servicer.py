@@ -159,7 +159,8 @@ class RekcurdDashboardServicer(rekcurd_pb2_grpc.RekcurdDashboardServicer):
         result_path = first_req.result_path
 
         local_data_path = self.rekcurd_pack.app.data_server.get_evaluation_data_path(data_path)
-        result, details = self.rekcurd_pack.app.evaluate(self.rekcurd_pack.predictor, local_data_path)
+        evaluate_result_gen = self.rekcurd_pack.app.evaluate(self.rekcurd_pack.predictor, local_data_path)
+        result = self.rekcurd_pack.app.data_server.upload_evaluation_result(evaluate_result_gen, result_path)
         label_ios = [self.get_io_by_type(l) for l in result.label]
         metrics = rekcurd_pb2.EvaluationMetrics(num=result.num,
                                                 accuracy=result.accuracy,
@@ -168,8 +169,6 @@ class RekcurdDashboardServicer(rekcurd_pb2_grpc.RekcurdDashboardServicer):
                                                 fvalue=result.fvalue,
                                                 option=result.option,
                                                 label=label_ios)
-        self.rekcurd_pack.app.data_server.upload_evaluation_result_summary(result, result_path)
-        self.rekcurd_pack.app.data_server.upload_evaluation_result_detail(details, result_path)
         return rekcurd_pb2.EvaluateModelResponse(metrics=metrics)
 
     @error_handling(rekcurd_pb2.UploadEvaluationDataResponse(status=0, message='Error: Uploading evaluation data.'))
@@ -202,8 +201,6 @@ class RekcurdDashboardServicer(rekcurd_pb2_grpc.RekcurdDashboardServicer):
         local_result_summary_path = self.rekcurd_pack.app.data_server.get_eval_result_summary(result_path)
         local_result_detail_path = self.rekcurd_pack.app.data_server.get_eval_result_detail(result_path)
 
-        with open(local_result_detail_path, 'rb') as f:
-            result_details = pickle.load(f)
         with open(local_result_summary_path, 'rb') as f:
             result = pickle.load(f)
         label_ios = [self.get_io_by_type(l) for l in result.label]
@@ -218,21 +215,28 @@ class RekcurdDashboardServicer(rekcurd_pb2_grpc.RekcurdDashboardServicer):
         detail_chunks = []
         detail_chunk = []
         metrics_size = sys.getsizeof(metrics)
-        for detail in self.rekcurd_pack.app.get_evaluate_detail(local_data_path, result_details):
-            detail_chunk.append(rekcurd_pb2.EvaluationResultResponse.Detail(
-                input=self.get_io_by_type(detail.input),
-                label=self.get_io_by_type(detail.label),
-                output=self.get_io_by_type(detail.result.result.label),
-                score=self.get_score_by_type(detail.result.result.score),
-                is_correct=detail.result.is_correct
-            ))
-            if len(detail_chunk) == self.CHUNK_SIZE:
-                if metrics_size + sys.getsizeof(detail_chunk + detail_chunks) < self.BYTE_LIMIT:
-                    detail_chunks.extend(detail_chunk)
-                else:
-                    yield rekcurd_pb2.EvaluationResultResponse(metrics=metrics, detail=detail_chunks)
-                    detail_chunks = detail_chunk
-                detail_chunk = []
+        with open(local_result_detail_path, 'rb') as detail_file:
+            def generate_result_detail():
+                try:
+                    while True:
+                        yield pickle.load(detail_file)
+                except EOFError:
+                    pass
+            for detail in self.rekcurd_pack.app.get_evaluate_detail(local_data_path, generate_result_detail()):
+                detail_chunk.append(rekcurd_pb2.EvaluationResultResponse.Detail(
+                    input=self.get_io_by_type(detail.input),
+                    label=self.get_io_by_type(detail.label),
+                    output=self.get_io_by_type(detail.result.result.label),
+                    score=self.get_score_by_type(detail.result.result.score),
+                    is_correct=detail.result.is_correct
+                ))
+                if len(detail_chunk) == self.CHUNK_SIZE:
+                    if metrics_size + sys.getsizeof(detail_chunk + detail_chunks) < self.BYTE_LIMIT:
+                        detail_chunks.extend(detail_chunk)
+                    else:
+                        yield rekcurd_pb2.EvaluationResultResponse(metrics=metrics, detail=detail_chunks)
+                        detail_chunks = detail_chunk
+                    detail_chunk = []
 
         if len(detail_chunks + detail_chunk) > 0:
             if metrics_size + sys.getsizeof(detail_chunk + detail_chunks) < self.BYTE_LIMIT:

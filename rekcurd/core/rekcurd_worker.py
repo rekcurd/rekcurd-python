@@ -4,7 +4,7 @@
 
 from abc import ABCMeta, abstractmethod
 from enum import Enum
-from typing import List, Tuple, Generator
+from typing import Generator
 
 from rekcurd.utils import RekcurdConfig, PredictInput, PredictResult, EvaluateResult, EvaluateDetail, EvaluateResultDetail
 from rekcurd.logger import SystemLoggerInterface, ServiceLoggerInterface, JsonSystemLogger, JsonServiceLogger
@@ -44,7 +44,7 @@ class Rekcurd(metaclass=ABCMeta):
         raise NotImplemented()
 
     @abstractmethod
-    def evaluate(self, predictor: object, filepath: str) -> Tuple[EvaluateResult, List[EvaluateResultDetail]]:
+    def evaluate(self, predictor: object, filepath: str) -> Generator[EvaluateResultDetail, None, EvaluateResult]:
         """
         evaluate
         :param predictor: Your ML predictor object. object
@@ -56,18 +56,18 @@ class Rekcurd(metaclass=ABCMeta):
             result.recall: Recall. arr[float]
             result.fvalue: F1 value. arr[float]
             result.option: Optional metrics. dict[str, float]
-        :return detail[]: Detail result of each prediction. List[EvaluateResultDetail]
+        :generate detail[]: Detail result of each prediction. List[EvaluateResultDetail]
             detail[].result: Prediction result. PredictResult
             detail[].is_correct: Prediction result is correct or not. bool
         """
         raise NotImplemented()
 
     @abstractmethod
-    def get_evaluate_detail(self, filepath: str, details: List[EvaluateResultDetail]) -> Generator[EvaluateDetail, None, None]:
+    def get_evaluate_detail(self, filepath: str, details: Generator[EvaluateResultDetail, None, None]) -> Generator[EvaluateDetail, None, None]:
         """
         get_evaluate_detail
         :param filepath: Evaluation data file path. str
-        :param details: Detail result of each prediction. List[EvaluateResultDetail]
+        :param details: Detail result of each prediction. Generator[EvaluateResultDetail, None, None]
         :return rtn: Return results. Generator[EvaluateDetail, None, None]
             rtn.input: Input data. PredictInput, one of string/bytes/arr[int]/arr[float]/arr[string]
             rtn.label: Predict label. PredictLabel, one of string/bytes/arr[int]/arr[float]/arr[string]

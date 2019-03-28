@@ -1,7 +1,7 @@
 import unittest
 
 from rekcurd.protobuf import rekcurd_pb2
-from rekcurd.utils import RekcurdConfig, ModelModeEnum
+from rekcurd.utils import RekcurdConfig, ModelModeEnum, EvaluateResultDetail, EvaluateResult, PredictResult
 from rekcurd.data_servers import DataServer
 
 from . import patch_predictor
@@ -68,12 +68,15 @@ class DataServerTest(unittest.TestCase):
             self.data_server.upload_evaluation_data(request_iterator)
 
     @patch_predictor()
-    def test_upload_evaluation_result_summary(self):
-        self.assertEqual(self.data_server.upload_evaluation_result_summary(b'hoge', "test/eval/data"), "rekcurd-eval/data_eval_res.pkl")
+    def test_upload_evaluation_result(self):
+        eval_res = EvaluateResult(1, 0.4, [0.5], [0.5], [0.5], [0.5], ['label'])
 
-    @patch_predictor()
-    def test_upload_evaluation_result_detail(self):
-        self.assertEqual(self.data_server.upload_evaluation_result_detail(b'hoge', "test/eval/data"), "rekcurd-eval/data_eval_detail.pkl")
+        def generate_eval():
+            for _ in range(2):
+                yield EvaluateResultDetail(result=PredictResult('label', 0.5),
+                                           is_correct=True)
+            return eval_res
+        self.assertEqual(self.data_server.upload_evaluation_result(generate_eval(), "test/eval/data"), eval_res)
 
     @patch_predictor()
     def test_upload_evaluation_result_invalid_path(self):
