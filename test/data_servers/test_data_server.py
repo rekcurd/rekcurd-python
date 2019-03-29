@@ -46,12 +46,8 @@ class DataServerTest(unittest.TestCase):
         self.assertEqual(self.data_server.get_evaluation_data_path("test/eval/data"), "rekcurd-eval/data")
 
     @patch_predictor()
-    def test_get_eval_result_summary(self):
-        self.assertEqual(self.data_server.get_eval_result_summary("test/eval/data"), "rekcurd-eval/data_eval_res.pkl")
-
-    @patch_predictor()
     def test_get_eval_result_detail(self):
-        self.assertEqual(self.data_server.get_eval_result_detail("test/eval/data"), "rekcurd-eval/data_eval_detail.pkl")
+        self.assertEqual(self.data_server.get_eval_result_detail("test/eval/detail.pkl"), "rekcurd-eval/detail.pkl")
 
     def __get_UploadEvaluationDataRequest(self, data_path: str):
         yield rekcurd_pb2.UploadEvaluationDataRequest(data_path=data_path, data=b'data')

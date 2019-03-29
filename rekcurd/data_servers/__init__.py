@@ -19,10 +19,6 @@ class DataServer(object):
     Return file path. Download files if needed.
     """
 
-    # Suffix for evaluation results
-    __EVALUATE_RESULT = '_eval_res.pkl'
-    __EVALUATE_DETAIL = '_eval_detail.pkl'
-
     def __init__(self, config: RekcurdConfig):
         self.config = config
         if config.MODEL_MODE_ENUM == ModelModeEnum.LOCAL:
@@ -81,22 +77,16 @@ class DataServer(object):
             self._api_handler.download(filepath, str(local_filepath))
         return str(local_filepath)
 
-    def _get_eval_result(self, filepath: str, suffix: str):
+    def get_eval_result_detail(self, filepath: str) -> str:
         valid_path = convert_to_valid_path(filepath)
         if filepath != str(valid_path):
             raise Exception(f'Error: Invalid file path specified -> {filepath}')
 
-        local_filepath = Path(self._api_handler.LOCAL_EVAL_DIR, valid_path.name+suffix)
+        local_filepath = Path(self._api_handler.LOCAL_EVAL_DIR, valid_path.name)
         if not local_filepath.exists():
             local_filepath.parent.mkdir(parents=True, exist_ok=True)
-            self._api_handler.download(filepath+suffix, str(local_filepath))
+            self._api_handler.download(filepath, str(local_filepath))
         return str(local_filepath)
-
-    def get_eval_result_summary(self, filepath: str) -> str:
-        return self._get_eval_result(filepath, self.__EVALUATE_RESULT)
-
-    def get_eval_result_detail(self, filepath: str) -> str:
-        return self._get_eval_result(filepath, self.__EVALUATE_DETAIL)
 
     def upload_evaluation_data(self, request_iterator: Iterator[rekcurd_pb2.UploadEvaluationDataRequest]) -> str:
         first_req = next(request_iterator)
@@ -120,21 +110,15 @@ class DataServer(object):
         if filepath != str(valid_path):
             raise Exception(f'Error: Invalid evaluation result file path specified -> {filepath}')
 
-        local_dir = Path(self._api_handler.LOCAL_EVAL_DIR)
-        local_dir.mkdir(parents=True, exist_ok=True)
+        local_filepath = Path(self._api_handler.LOCAL_EVAL_DIR, valid_path.name)
+        local_filepath.parent.mkdir(parents=True, exist_ok=True)
 
-        detail_local_filepath = local_dir / (valid_path.name+self.__EVALUATE_DETAIL)
-        with detail_local_filepath.open(mode='wb') as detail_file:
+        with local_filepath.open(mode='wb') as detail_file:
             try:
                 while True:
                     pickle.dump(next(data_gen), detail_file)
             except StopIteration as e:
-                result_local_filepath = local_dir / (valid_path.name+self.__EVALUATE_RESULT)
                 evaluate_result = e.value
-                with result_local_filepath.open(mode='wb') as f:
-                    pickle.dump(evaluate_result, f)
-                self._api_handler.upload(filepath+self.__EVALUATE_RESULT, str(result_local_filepath))
-
-        self._api_handler.upload(filepath+self.__EVALUATE_DETAIL, str(detail_local_filepath))
+        self._api_handler.upload(filepath, str(local_filepath))
 
         return evaluate_result

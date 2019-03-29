@@ -198,19 +198,10 @@ class RekcurdDashboardServicer(rekcurd_pb2_grpc.RekcurdDashboardServicer):
         data_path = request.data_path
         result_path = request.result_path
         local_data_path = self.rekcurd_pack.app.data_server.get_evaluation_data_path(data_path)
-        local_result_summary_path = self.rekcurd_pack.app.data_server.get_eval_result_summary(result_path)
         local_result_detail_path = self.rekcurd_pack.app.data_server.get_eval_result_detail(result_path)
 
-        with open(local_result_summary_path, 'rb') as f:
-            result = pickle.load(f)
-        label_ios = [self.get_io_by_type(l) for l in result.label]
-        metrics = rekcurd_pb2.EvaluationMetrics(num=result.num,
-                                                accuracy=result.accuracy,
-                                                precision=result.precision,
-                                                recall=result.recall,
-                                                fvalue=result.fvalue,
-                                                option=result.option,
-                                                label=label_ios)
+        # TODO: deprecated. remove metrics from response in the next gRPC spec
+        metrics = rekcurd_pb2.EvaluationMetrics()
 
         detail_chunks = []
         detail_chunk = []
