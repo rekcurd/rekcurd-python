@@ -204,14 +204,6 @@ class RekcurdWorkerServicerTest(unittest.TestCase):
         rpc, responses = self.__send_eval_result(1, 1)
         response = responses[0]
 
-        self.assertEqual(round(response.metrics.num, 3), eval_result.num)
-        self.assertEqual(round(response.metrics.accuracy, 3), eval_result.accuracy)
-        self.assertEqual([round(p, 3) for p in response.metrics.precision], eval_result.precision)
-        self.assertEqual([round(r, 3) for r in response.metrics.recall], eval_result.recall)
-        self.assertEqual([round(f, 3) for f in response.metrics.fvalue], eval_result.fvalue)
-        self.assertEqual(round(response.metrics.option['dummy'], 3), eval_result.option['dummy'])
-        self.assertEqual([l.str.val[0] for l in response.metrics.label], eval_result.label)
-
         self.assertEqual(len(response.detail), 1)
         detail = response.detail[0]
         self.assertEqual(detail.input.str.val, [eval_detail.input])
