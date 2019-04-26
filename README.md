@@ -86,9 +86,9 @@ The "option" field needs to be a json format. Any style is Ok but we have some r
 |:---|:---|:---|
 |num<BR>(required)|int |Number of evaluation data. |
 |accuracy<BR>(required) |double |Accuracy. |
-|precision<BR>(required) |double[*N*][*M*] |Precision. |
-|recall<BR>(required) |double[*N*][*M*] |Recall. |
-|fvalue<BR>(required) |double[*N*][*M*] |F1 value. |
+|precision<BR>(required) |double[*M*] |Precision. |
+|recall<BR>(required) |double[*M*] |Recall. |
+|fvalue<BR>(required) |double[*M*] |F1 value. |
 
 ### `EvaluateDetail` type
 `EvaluateDetail` is the details of evaluation result.
