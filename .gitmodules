@@ -1,4 +1,4 @@
 [submodule "rekcurd/grpc"]
 	path = rekcurd/grpc
 	url = https://github.com/rekcurd/grpc-proto.git
-	branch = master
+	branch = v1.0.0
