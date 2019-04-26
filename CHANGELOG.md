@@ -1,11 +1,33 @@
 # Change Log
 
-## [Unreleased](https://github.com/rekcurd/rekcurd-python/tree/HEAD)
+## [v1.0.0](https://github.com/rekcurd/rekcurd-python/tree/v1.0.0) (2019-04-26)
+[Full Changelog](https://github.com/rekcurd/rekcurd-python/compare/v0.4.5...v1.0.0)
 
-[Full Changelog](https://github.com/rekcurd/rekcurd-python/compare/v0.4.5...HEAD)
+**Implemented enhancements:**
+
+- Large Evaluation data may cause OOM error [\#25](https://github.com/rekcurd/rekcurd-python/issues/25)
+- Pipnize the packages [\#2](https://github.com/rekcurd/rekcurd-python/issues/2)
+
+**Closed issues:**
+
+- Delete Evaluation file [\#29](https://github.com/rekcurd/rekcurd-python/issues/29)
 
 **Merged pull requests:**
 
+- Update documents [\#47](https://github.com/rekcurd/rekcurd-python/pull/47) ([keigohtr](https://github.com/keigohtr))
+- quit saving evaluate result as file [\#46](https://github.com/rekcurd/rekcurd-python/pull/46) ([yuki-mt](https://github.com/yuki-mt))
+- prevent OOM due to evaluation data [\#44](https://github.com/rekcurd/rekcurd-python/pull/44) ([yuki-mt](https://github.com/yuki-mt))
+- Pass object to update `predictor` [\#43](https://github.com/rekcurd/rekcurd-python/pull/43) ([keigohtr](https://github.com/keigohtr))
+- Output error log [\#42](https://github.com/rekcurd/rekcurd-python/pull/42) ([keigohtr](https://github.com/keigohtr))
+- Add `service\_insecure\_host` option [\#41](https://github.com/rekcurd/rekcurd-python/pull/41) ([keigohtr](https://github.com/keigohtr))
+- Remove sqlalchemy library [\#40](https://github.com/rekcurd/rekcurd-python/pull/40) ([keigohtr](https://github.com/keigohtr))
+- Use `SERVICE\_ID` instead `SERVICE\_NAME` [\#39](https://github.com/rekcurd/rekcurd-python/pull/39) ([keigohtr](https://github.com/keigohtr))
+- Add AWS S3 data server [\#38](https://github.com/rekcurd/rekcurd-python/pull/38) ([keigohtr](https://github.com/keigohtr))
+- Add template generation script [\#37](https://github.com/rekcurd/rekcurd-python/pull/37) ([keigohtr](https://github.com/keigohtr))
+- Add dataserver, remove models [\#36](https://github.com/rekcurd/rekcurd-python/pull/36) ([keigohtr](https://github.com/keigohtr))
+- add label to metrics [\#34](https://github.com/rekcurd/rekcurd-python/pull/34) ([yuki-mt](https://github.com/yuki-mt))
+- fix type hinting [\#33](https://github.com/rekcurd/rekcurd-python/pull/33) ([yuki-mt](https://github.com/yuki-mt))
+- Rename from `drucker` to `rekcurd` [\#32](https://github.com/rekcurd/rekcurd-python/pull/32) ([keigohtr](https://github.com/keigohtr))
 - Rename repository link [\#31](https://github.com/rekcurd/rekcurd-python/pull/31) ([keigohtr](https://github.com/keigohtr))
 
 ## [v0.4.5](https://github.com/rekcurd/rekcurd-python/tree/v0.4.5) (2019-01-30)
