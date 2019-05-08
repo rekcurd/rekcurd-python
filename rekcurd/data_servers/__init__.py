@@ -12,6 +12,7 @@ from .data_handler import convert_to_valid_path
 from .local_handler import LocalHandler
 from .ceph_handler import CephHandler
 from .aws_s3_handler import AwsS3Handler
+from .gcs_handler import GcsHandler
 
 
 class DataServer(object):
@@ -27,6 +28,8 @@ class DataServer(object):
             self._api_handler = CephHandler(config)
         elif config.MODEL_MODE_ENUM == ModelModeEnum.AWS_S3:
             self._api_handler = AwsS3Handler(config)
+        elif config.MODEL_MODE_ENUM == ModelModeEnum.GCS:
+            self._api_handler = GcsHandler(config)
         else:
             raise ValueError("Invalid ModelModeEnum value.")
 
