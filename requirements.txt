@@ -4,4 +4,4 @@ grpcio>=1.13.0 # Apache-2.0
 grpcio-tools>=1.13.0 # Apache-2.0
 PyYAML>=3.12 # MIT
 boto>=2.49.0 # MIT
-boto3>=1.9.0 # Apache-2.0
+boto3>=1.9.38 # Apache-2.0

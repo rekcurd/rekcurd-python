@@ -16,6 +16,10 @@ def patch_predictor():
                           new=Mock(return_value=None)) as _, \
                     patch('rekcurd.data_servers.AwsS3Handler.upload',
                           new=Mock(return_value=None)) as _, \
+                    patch('rekcurd.data_servers.GcsHandler.download',
+                          new=Mock(return_value=None)) as _, \
+                    patch('rekcurd.data_servers.GcsHandler.upload',
+                          new=Mock(return_value=None)) as _, \
                     patch('builtins.open', new_callable=mock_open) as _:
                 return func(*args, **kwargs)
         return inner_method

@@ -28,5 +28,8 @@ model:
     access_key: xxxxx               #  AWS access key.
     secret_key: xxxxx               #  AWS secret key.
     bucket: xxxxx                   #  AWS bucket name.
-  gcs:                              # :TODO: GCS parameters.
+  gcs:                              # GCS access parameters. Required for "gcs" mode. To generate keys, see "https://cloud.google.com/storage/docs/migrating#keys"
     filepath: model/default.model   #  ML model file. Default "model/default.model"
+    access_key: xxxxx               #  GCS access key.
+    secret_key: xxxxx               #  GCS secret key.
+    bucket: xxxxx                   #  GCS bucket name.
