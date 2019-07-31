@@ -56,7 +56,9 @@ class RekcurdConfig:
     AWS_ACCESS_KEY: str = None
     AWS_SECRET_KEY: str = None
     AWS_BUCKET_NAME: str = None
-    # TODO: GCS
+    GCS_ACCESS_KEY: str = None
+    GCS_SECRET_KEY: str = None
+    GCS_BUCKET_NAME: str = None
 
     def __init__(self, config_file: str = None):
         self.KUBERNETES_MODE = os.getenv("REKCURD_KUBERNETES_MODE")
@@ -74,6 +76,7 @@ class RekcurdConfig:
             ceph_port: int = None, ceph_is_secure: bool = None,
             ceph_bucket_name: str = None, aws_access_key: str = None,
             aws_secret_key: str = None, aws_bucket_name: str = None,
+            gcs_access_key: str = None, gcs_secret_key: str = None, gcs_bucket_name: str = None,
             **options):
         self.DEBUG_MODE = debug_mode if debug_mode is not None else self.DEBUG_MODE
         self.APPLICATION_NAME = application_name or self.APPLICATION_NAME
@@ -92,7 +95,9 @@ class RekcurdConfig:
         self.AWS_ACCESS_KEY = aws_access_key or self.AWS_ACCESS_KEY
         self.AWS_SECRET_KEY = aws_secret_key or self.AWS_SECRET_KEY
         self.AWS_BUCKET_NAME = aws_bucket_name or self.AWS_BUCKET_NAME
-        # TODO: GCS
+        self.GCS_ACCESS_KEY = gcs_access_key or self.GCS_ACCESS_KEY
+        self.GCS_SECRET_KEY = gcs_secret_key or self.GCS_SECRET_KEY
+        self.GCS_BUCKET_NAME = gcs_bucket_name or self.GCS_BUCKET_NAME
 
     def __load_from_file(self, config_file: str):
         if config_file is not None:
@@ -128,8 +133,13 @@ class RekcurdConfig:
             self.AWS_ACCESS_KEY = config_model_mode.get("access_key")
             self.AWS_SECRET_KEY = config_model_mode.get("secret_key")
             self.AWS_BUCKET_NAME = config_model_mode.get("bucket")
+        elif self.MODEL_MODE_ENUM == ModelModeEnum.GCS:
+            config_model_mode = config_model.get(model_mode, dict())
+            self.MODEL_FILE_PATH = config_model_mode.get("filepath", "model/default.model")
+            self.GCS_ACCESS_KEY = config_model_mode.get("access_key")
+            self.GCS_SECRET_KEY = config_model_mode.get("secret_key")
+            self.GCS_BUCKET_NAME = config_model_mode.get("bucket")
         else:
-            # TODO: GCS
             raise ValueError("'{}' is not supported as ModelModeEnum".format(model_mode))
 
     def __load_from_env(self):
@@ -151,4 +161,6 @@ class RekcurdConfig:
         self.AWS_ACCESS_KEY = os.getenv("REKCURD_AWS_ACCESS_KEY")
         self.AWS_SECRET_KEY = os.getenv("REKCURD_AWS_SECRET_KEY")
         self.AWS_BUCKET_NAME = os.getenv("REKCURD_AWS_BUCKET_NAME")
-        # TODO: GCS
+        self.GCS_ACCESS_KEY = os.getenv("REKCURD_GCS_ACCESS_KEY")
+        self.GCS_SECRET_KEY = os.getenv("REKCURD_GCS_SECRET_KEY")
+        self.GCS_BUCKET_NAME = os.getenv("REKCURD_GCS_BUCKET_NAME")

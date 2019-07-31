@@ -53,6 +53,7 @@ setup(
     name=PACKAGE_NAME,
     version=VERSION,
     description="A Python gRPC framework for serving a machine learning module written in Python.",
+    long_description_content_type='text/markdown',
     author_email="",
     author="Rekcurd",
     license="Apache License Version 2.0",
