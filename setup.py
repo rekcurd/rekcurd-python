@@ -65,6 +65,11 @@ setup(
     packages=['rekcurd', 'rekcurd.console_scripts', 'rekcurd.core',
               'rekcurd.data_servers', 'rekcurd.logger', 'rekcurd.protobuf',
               'rekcurd.template', 'rekcurd.utils'],
+    package_data={
+        'rekcurd': [
+            'template/*'
+        ],
+    },
     include_package_data=True,
     long_description=LONG_DESCRIPTION,
     entry_points={
