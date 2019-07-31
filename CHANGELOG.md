@@ -1,5 +1,18 @@
 # Change Log
 
+## [v1.0.1](https://github.com/rekcurd/rekcurd-python/tree/v1.0.1)
+
+[Full Changelog](https://github.com/rekcurd/rekcurd-python/compare/v1.0.0...v1.0.1)
+
+**Closed issues:**
+
+- Add storage option to load model \(local / s3 / gcs / PV\) [\#30](https://github.com/rekcurd/rekcurd-python/issues/30)
+
+**Merged pull requests:**
+
+- Specify `long\_description\_content\_type` [\#49](https://github.com/rekcurd/rekcurd-python/pull/49) ([keigohtr](https://github.com/keigohtr))
+- Add GCS support [\#48](https://github.com/rekcurd/rekcurd-python/pull/48) ([keigohtr](https://github.com/keigohtr))
+
 ## [v1.0.0](https://github.com/rekcurd/rekcurd-python/tree/v1.0.0) (2019-04-26)
 [Full Changelog](https://github.com/rekcurd/rekcurd-python/compare/v0.4.5...v1.0.0)
 
